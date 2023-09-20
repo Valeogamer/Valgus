@@ -15,3 +15,4 @@ def remove_my_bg():
     output.save(output_path)
     end = time.time()
     print(end - start)
+
