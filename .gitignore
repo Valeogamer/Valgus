@@ -1,4 +1,7 @@
 /venv/
 /.idea/
-/images/
+/images_remove_bg/
 /Learn_OpenCV/
+/dataset_images/
+/images_remove_bg/
+/masks/
