@@ -1,31 +1,120 @@
-"""
-    Аугментация данных.
-    Модуль содержит различные классы и их методы для аугментации данных (генерации данных).
-    Класс образованный с применением методов OpenCV
-    Класс образованный с применением методов TF.keras.preprocessing.image (ImageDataGenerator)
-    Классы как минимум должны включать в себя такие методы как:
-          - Изменение контрастности и яркости
-          - Угол поворота изображения
-          - Приближение и отдаление случайных участков
-          - Случайное смещение
-          - Срез случайной части фото
-          - Добавление шума
-    Несколько различных классов с целью оценки производительности и изучения различных доступных методов аугментации.
-
-"""
-import cv2
 from PIL import Image, ImageEnhance, ImageFilter
+import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 import typing as tp
+import Constants
+import pickle
+import cv2
+import os
 
-cv: str = 'opencv'
-pw: str = 'pillow'
-tfi: str = 'tfimage'
-start: tp.Optional[str] = None
+
+class FileManager:
+    """
+    Менеджер файлов
+    """
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return f"FileManager {id(self)}"
+
+    def rename_rextention(self, path_dir: str, new_name: str, extention: str):
+        """
+        Переименование файлов и изменение расширения
+        :param path_dir: Путь до каталога с изображениями
+        :param new_name: Новое имя
+        :param extention: Новое расширение
+        :return:
+        """
+        images_path = [path_dir + '//' + i for i in os.listdir(path_dir)]
+        for i in range(1, len(images_path) + 1):
+            os.rename(images_path[i - 1], f'{path_dir + "//" + new_name}.{i}.{extention}')
+
+
+class CreateDatasetImages:
+    """
+    Формирование датасета из изображения
+    """
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return f'CreateDatasetImages {id(self)}'
+
+    def convert_images_to_array(self, images_path: list[str]) -> np.array:
+        """
+        Представляет изображение в виде матрицы
+        :param images_path: список с путями до изображений
+        :return: список содержащий матрицы
+        """
+        images_data = []
+        for image_path in images_path:
+            image = Image.open(image_path)
+            image = np.array(image)
+            images_data.append(image)
+        return images_data
+
+    def resized_images(self, width: int, height: int, images_data: list):
+        """
+        Изменение размера изображения
+        :param width: желаемая ширина изображения
+        :param height: желаемая ширина изображения
+        :param images_data: список с изображениями
+        :return: список изображений с измененными размерами
+        """
+        new_size = (width, height)  # Задайте желаемый размер
+
+        resized_images = []
+        for image in images_data:
+            image = Image.fromarray(image).convert("RGB")
+            image = image.resize(new_size)
+            resized_images.append(np.array(image))
+        return resized_images
+
+    def save(self, data: np.array, name: str, flag: int = None):
+        """
+        Сохранение готового данных
+        :param data: данные
+        :param name: имя данных
+        :param flag: формат сохранения: 1 -> pickle(pkl); 2 - numpy(npy)
+        :return:
+        """
+        if flag == 1:
+            with open(f'{name}.pkl', 'wb') as data_file:
+                pickle.dump(data, data_file, protocol=pickle.HIGHEST_PROTOCOL)
+        elif flag == 2:
+            np.save(f'{name}.npy', data)
+        else:
+            with open(f'{name}.pkl', 'wb') as data_file:
+                pickle.dump(data, data_file, protocol=pickle.HIGHEST_PROTOCOL)
+            np.save(f'{name}.npy', data)
+        print("Сохранение завершено")
+
+    def load(self, data_dir: str):
+        """
+        Загрузка данных формата pkl и npy
+        :param data_dir: путь до данных
+        :return: загруженные данные
+        """
+        if 'pkl' in data_dir:
+            with open(f'{data_dir}', 'rb') as data_file:
+                data = pickle.load(data_file)
+                return data
+        elif 'npy' in data_dir:
+            data = np.load(f'{data_dir}', allow_pickle=True)
+            return data
+        else:
+            raise Exception("Ошибка при загрузке данных!")
 
 
 class ImageAugmentorCV:
+    """
+    Аугментация данных методами OpenCV
+    """
+
     def __init__(self):
         pass
 
@@ -161,6 +250,33 @@ class ImageAugmentorCV:
         table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype(np.uint8)
         return cv2.LUT(image, table)
 
+    def gray_scale(self, image: np.ndarray) -> np.ndarray:
+        """
+        Перевод изображения в ч/б
+        :param image: Изображение
+        :return: ч/б изображение
+        """
+        return cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+
+    def resized_images(self, image: np.ndarray, width: int, height: int) -> np.ndarray:
+        """
+        Изменение размера изображения
+        :param image: изображение
+        :param width: желаемая ширина изображения
+        :param height: желаемая высота изображения
+        :return:
+        """
+        return cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
+
+    def show_cv(self, image: np.ndarray, windows_name: str = 'Image'):
+        """
+        Отображение изображения
+        :param image: Изображение
+        :param windows_name: Имя окна вывода
+        :return: Отображение изображения
+        """
+        return cv2.imshow(windows_name, image)
+
     def save_image(self, image: np.ndarray, save_path: str) -> None:
         """
         Сохранение изображения по указанному пути
@@ -172,6 +288,10 @@ class ImageAugmentorCV:
 
 
 class ImageAugmentorPillow:
+    """
+    Аугментация данных методами Pillow
+    """
+
     def __init__(self):
         pass
 
@@ -309,6 +429,66 @@ class ImageAugmentorPillow:
         gamma_corrected_array = np.power(image_array / 255.0, gamma) * 255.0
         return Image.fromarray(gamma_corrected_array.astype(np.uint8))
 
+    def gray_scale(self, image):
+        """
+        Перевод изображения в ч/б
+        :param image: изображение
+        :return: ч/б изображение
+        """
+        return image.convert("L")
+
+    def convert_images_to_array(self, images_path: list[str]) -> np.array:
+        """
+        Перевод изображения в матричный вид
+        :param images_path: Список путей до изображения
+        :return: список содержащий матрицы
+        """
+        images_data = []
+        for image_path in images_path:
+            image = Image.open(image_path)
+            image = np.array(image)
+            images_data.append(image)
+        return images_data
+
+    def resized_images(self, width: int, height: int, images_data: list):
+        """
+        Изменение размера изображения
+        :param width: желаемая ширина изображения
+        :param height: желаемая ширина изображения
+        :param images_data: список с изображениями
+        :return: список изображений с измененными размерами
+        """
+        new_size = (width, height)  # Задайте желаемый размер
+
+        resized_images = []
+        for image in images_data:
+            image = Image.fromarray(image).convert("RGB")
+            image = image.resize(new_size)
+            resized_images.append(np.array(image))
+        return resized_images
+
+    def show_pw(self, image):
+        """
+        Вывод изображения
+        :param image: Изображение
+        :return: Отображение изображения
+        """
+        return image.show()
+
+    def show_mat(self, data_images: np.array, labels: int = None):
+        """
+        Вывод матричного изображения
+        :param data_images: изображение в виде матрицы
+        :param labels: метка если имеется, если изображение из датасета и имеет метку
+        :return:
+        """
+        plt.imshow(data_images)
+        if labels:
+            plt.title(f"Метка: {labels}")
+        else:
+            plt.title("Вывод изображения")
+        plt.show()
+
     def save_image(self, image, save_path: str):
         """
         Сохранение изображения по указанному пути
@@ -321,7 +501,10 @@ class ImageAugmentorPillow:
 
 class ImageAugmentorTF:
     """
+    Аугментация данных методами TF.Image
     ! Слишком сильно зависим от версии
+    И проще использовать TF методы для аугментации при сборке модели НС,
+    чем в локальной части конвейера.
     """
 
     def __init__(self):
@@ -330,6 +513,34 @@ class ImageAugmentorTF:
 
 # Пример использования класса
 if __name__ == "__main__":
+
+    new_name_Pronation = 'pronation'
+    new_name_Overpronation = 'overpronation'
+    new_extention = 'png'
+    path_dir_Pronation = "c://Users//User//Desktop//Разметка Тесты//BigFootBalance//Pronation"
+    path_dir_Overpronation = "c://Users//User//Desktop//Разметка Тесты//BigFootBalance//Overpronation"
+    # newName_newExtention(path_dir_Pronation, new_name_Pronation, new_extention)
+    # newName_newExtention(path_dir_Overpronation, new_name_Overpronation, new_extention)
+    images_path_Pronation = [path_dir_Pronation + '//' + i for i in os.listdir(path_dir_Pronation)]
+    images_path_Overpronation = [path_dir_Overpronation + '//' + i for i in os.listdir(path_dir_Overpronation)]
+    images_data_Overpronation = convert_images_to_array(images_path_Overpronation)
+    images_data_Pronation = convert_images_to_array(images_path_Pronation)
+    images_data_Overpronation = resized_images(256, 256, images_data_Overpronation)
+    images_data_Pronation = resized_images(256, 256, images_data_Pronation)
+    # visualization(images_data_Pronation[0])
+    overpronation_labels = [0] * len(images_data_Overpronation)
+    pronation_labels = [1] * len(images_data_Pronation)
+    data = images_data_Overpronation + images_data_Pronation
+    labels = overpronation_labels + pronation_labels
+    data, labels = shuffle(data, labels, random_state=42)
+    save(data=data, name='data')
+    save(data=labels, name='labels')
+    data_n = load('data.npy')
+    data_p = load('data.pkl')
+    labels_n = load('labels.npy')
+    labels_p = load('labels.pkl')
+    print()
+
     start = pw  # Выбор кейса
     if start is cv:
         # Загрузка изображения
@@ -366,7 +577,7 @@ if __name__ == "__main__":
         # Pillow
         # Загрузка изображения
         image_path = "TestImages/Foot.png"
-        image_pillow = Image.open(image_path)   # :PIL.ImagePlugin(jpeg, png, ...)
+        image_pillow = Image.open(image_path)  # :PIL.ImagePlugin(jpeg, png, ...)
 
         # Создание объекта класса
         augmentor_pillow = ImageAugmentorPillow()
