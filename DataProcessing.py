@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import typing as tp
 import numpy as np
-import Constants
 import pickle
 import cv2
 import os
@@ -14,18 +13,31 @@ class FileManager:
     Менеджер файлов
     """
 
-    def __init__(self):
+    def __init__(self, path_dir, path_dir_p, path_dir_o, new_n_p, new_n_o, extention, new_path_dir, new_path_dir_o,
+                 new_path_dir_p):
         # ToDo некоторые атрибуты должны быть protected
-        self.path_dir = Constants.PATH_DIR
-        self.path_dir_pronation: str = Constants.PATH_DIR_P
-        self.path_dir_overpronation: str = Constants.PATH_DIR_O
-        self.new_name_pronation: str = Constants.NAME_P
-        self.new_name_overpronation: str = Constants.NAME_O
-        self.extention: str = Constants.EXTENTION_PNG
+        self.path_dir: tp.Optional[str] = path_dir  # Constants.PATH_DIR
+        self.path_dir_pronation: tp.Optional[str] = path_dir_p  # Constants.PATH_DIR_P
+        self.path_dir_overpronation: tp.Optional[str] = path_dir_o  # Constants.PATH_DIR_O
+        self.new_name_pronation: tp.Optional[str] = new_n_p  # Constants.NAME_P
+        self.new_name_overpronation: tp.Optional[str] = new_n_o  # Constants.NAME_O
+        self.extention: tp.Optional[str] = extention  # Constants.EXTENTION_PNG
+        self.new_path_dir: tp.Optional[str] = new_path_dir
+        self.new_path_dir_o: tp.Optional[str] = new_path_dir_o
+        self.new_path_dir_p: tp.Optional[str] = new_path_dir_p
         self.path_dir_list_pronation: tp.Optional[list[str]] = None
         self.path_dir_list_overpronation: tp.Optional[list[str]] = None
         self.len_data_pronation: tp.Optional[int] = None
         self.len_data_overpronation: tp.Optional[int] = None
+        self.result_path_dir_pronation: tp.Optional[int] = None
+        self.result_path_dir_overpronation: tp.Optional[int] = None
+        self.len_name: int = 0
+        if not os.path.exists(new_path_dir):
+            os.makedirs(new_path_dir)
+            if not os.path.exists(new_path_dir_o):
+                os.makedirs(new_path_dir_o)
+            if not os.path.exists(new_path_dir_p):
+                os.makedirs(new_path_dir_p)
         if self.path_dir_pronation and self.path_dir_overpronation:
             self.create_path_dir_list()
         if self.path_dir_list_pronation != None:
@@ -54,7 +66,7 @@ class FileManager:
         """
         images_path = [path_dir + '//' + i for i in os.listdir(path_dir)]
         for i in range(1, len(images_path) + 1):
-            os.rename(images_path[i - 1], f'{path_dir + "//" + "new_" +new_name}.{i}{extention}')
+            os.rename(images_path[i - 1], f'{path_dir + "//" + "new_" + new_name}.{i}{extention}')
 
     def create_path_dir_list(self):
         """
@@ -66,6 +78,13 @@ class FileManager:
         self.path_dir_list_pronation = [self.path_dir_pronation + '//' + i for i in os.listdir(self.path_dir_pronation)]
         self.path_dir_list_overpronation = [self.path_dir_overpronation + '//' + i for i in
                                             os.listdir(self.path_dir_overpronation)]
+    def update_result_data(self):
+        """
+        Количество полученных данных после обработки.
+        :return:
+        """
+        self.result_path_dir_pronation = [self.new_path_dir_p + '//' + i for i in os.listdir(self.new_path_dir_p)]
+        self.result_path_dir_overpronation = [self.new_path_dir_o + '//' + i for i in os.listdir(self.new_path_dir_o)]
 
 
 class CreateDatasetImages:
@@ -559,50 +578,57 @@ class ImageAugmentorPillow:
         return image.convert("L")
 
     def run_augmentor(self, file_manager: FileManager):
+        """
+        Запуск основных методов аугментации данных, по отдельности как для O, так и для P.
+        :param file_manager: менеджер файлов
+        :return:
+        """
         # ToDo Да понимаю, требует рефакторинга
         # аугментация pronation
         if len(file_manager.path_dir_list_pronation) > 0:
+            file_manager.len_name = 0
             for image_path in file_manager.path_dir_list_pronation:
                 list_aug_imgs = []
                 img = self.open_image(image_path)
-                list_aug_imgs.extend([self.blur(img), self.flip(img, 1), self.add_noise(img)])
+                img = img.resize((256, 256))
+                list_aug_imgs.extend([img, self.blur(img), self.flip(img, 1), self.add_noise(img)])
                 for image in list_aug_imgs:
-                    file_manager.len_data_pronation += 1
-                    self.save_image(image, save_path=file_manager.path_dir_pronation,
+                    self.save_image(image, save_path=file_manager.new_path_dir_p,
                                     name=file_manager.new_name_pronation + '.' + str(
-                                        file_manager.len_data_pronation) + file_manager.extention)
-                list_aug_imgs.append(img)
+                                        file_manager.len_name) + file_manager.extention)
+                    file_manager.len_name += 1
                 for l_img in list_aug_imgs:
                     rotate_list = []
                     rotate_list.extend(
                         [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180)])
                     for r_img in rotate_list:
-                        file_manager.len_data_pronation += 1
-                        self.save_image(r_img, save_path=file_manager.path_dir_pronation,
+                        self.save_image(r_img, save_path=file_manager.new_path_dir_p,
                                         name=file_manager.new_name_pronation + '.' + str(
-                                            file_manager.len_data_pronation) + file_manager.extention)
+                                            file_manager.len_name) + file_manager.extention)
+                        file_manager.len_name += 1
 
         # аугментация overpronation
         if len(file_manager.path_dir_list_overpronation) > 0:
+            file_manager.len_name = 0
             for image_path in file_manager.path_dir_list_overpronation:
                 list_aug_imgs = []
                 img = self.open_image(image_path)
-                list_aug_imgs.extend([self.blur(img), self.flip(img, 1), self.add_noise(img)])
+                img = img.resize((256, 256))
+                list_aug_imgs.extend([img, self.blur(img), self.flip(img, 1), self.add_noise(img)])
                 for image in list_aug_imgs:
-                    file_manager.len_data_overpronation += 1
-                    self.save_image(image, save_path=file_manager.path_dir_overpronation,
+                    self.save_image(image, save_path=file_manager.new_path_dir_o,
                                     name=file_manager.new_name_overpronation + '.' + str(
-                                        file_manager.len_data_overpronation) + file_manager.extention)
-                list_aug_imgs.append(img)
+                                        file_manager.len_name) + file_manager.extention)
+                    file_manager.len_name += 1
                 for l_img in list_aug_imgs:
                     rotate_list = []
                     rotate_list.extend(
                         [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180)])
                     for r_img in rotate_list:
-                        file_manager.len_data_overpronation += 1
-                        self.save_image(r_img, save_path=file_manager.path_dir_overpronation,
+                        self.save_image(r_img, save_path=file_manager.new_path_dir_o,
                                         name=file_manager.new_name_overpronation + '.' + str(
-                                            file_manager.len_data_overpronation) + file_manager.extention)
+                                            file_manager.len_name) + file_manager.extention)
+                        file_manager.len_name += 1
 
 
 class ImageAugmentorTF:
