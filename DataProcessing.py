@@ -1,6 +1,5 @@
 from PIL import Image, ImageEnhance, ImageFilter
 import matplotlib.pyplot as plt
-import tensorflow as tf
 import typing as tp
 import numpy as np
 import pickle
@@ -78,6 +77,7 @@ class FileManager:
         self.path_dir_list_pronation = [self.path_dir_pronation + '//' + i for i in os.listdir(self.path_dir_pronation)]
         self.path_dir_list_overpronation = [self.path_dir_overpronation + '//' + i for i in
                                             os.listdir(self.path_dir_overpronation)]
+
     def update_result_data(self):
         """
         Количество полученных данных после обработки.
@@ -166,7 +166,7 @@ class CreateDatasetImages:
 
 class ImageAugmentorCV:
     """
-    Аугментация данных методами OpenCV
+    Аугментация данных методами
     """
 
     def __init__(self):
@@ -629,15 +629,3 @@ class ImageAugmentorPillow:
                                         name=file_manager.new_name_overpronation + '.' + str(
                                             file_manager.len_name) + file_manager.extention)
                         file_manager.len_name += 1
-
-
-class ImageAugmentorTF:
-    """
-    Аугментация данных методами TF.Image
-    ! Слишком сильно зависим от версии
-    И проще использовать TF методы для аугментации при сборке модели НС,
-    чем в локальной части конвейера.
-    """
-
-    def __init__(self):
-        pass
