@@ -2,7 +2,7 @@ import cv2
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
-    image = cv2.imread('000128.png')
+    image = cv2.imread('000157.png')
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     _, binary = cv2.threshold(gray, 15, 255, cv2.THRESH_BINARY)
