@@ -6,16 +6,16 @@ TFI: str = 'tfimage'
 # Пути до файлов
 # ToDo Все пути отладочные временные
 # Путь до основных каталогов
-PATH_DIR = "Test"  # "c://Users//User//Desktop//Разметка Тесты//BFootBalance"
+PATH_DIR = "C://Diplom//Savefoot//BigFootBackupForMasks"
 # путь до файлов содержащие данные здоровых
-PATH_DIR_P: str = "c://Users//User//Desktop//Savefoot//BigFootBackupForMasks//Pronation_1//Pronation" # "c://Users//User//Desktop//Savefoot//BigFootBalance//Overpronation//" # "Test//Pronation"  # "TestImages//Pronation"  # "c://Users//User//Desktop//Разметка Тесты//BFootBalance//Pronation"
+PATH_DIR_P: str = "C://Diplom//Savefoot//BigFootBackupForMasks//Pronation_1//Pronation"  # "C://Diplom//Savefoot//BigFootBackupForMasks//Pronation_1//MaskPronationGray"
 # путь до файлов содержащие данные больных
-PATH_DIR_O: str = "c://Users//User//Desktop//Savefoot//BigFootBackupForMasks//Overpronation_1//Overpronation " # "c://Users//User//Desktop//Savefoot//BigFootBalance//Pronation//" # "Test//Overpronation"  # "TestImages//Overpronation"  # "c://Users//User//Desktop//Разметка Тесты//BFootBalance//Overpronation"
+PATH_DIR_O: str = "C://Diplom//Savefoot//BigFootBackupForMasks//Overpronation_1//Overpronation"  # "C://Diplom//Savefoot//BigFootBackupForMasks//Overpronation_1//MaskOverpronationGray"
 
 # Путь каталога для хранения папок
-NEW_PATH_DIR: str = "AugBigFoot"
-NEW_PATH_DIR_O: str = "AugBigFoot//Overpronation"
-NEW_PATH_DIR_P: str = "AugBigFoot//Pronation"
+NEW_PATH_DIR: str = "C://Diplom//OrigImage"
+NEW_PATH_DIR_O: str = "C://Diplom//OrigImage//Overpronation"
+NEW_PATH_DIR_P: str = "C://Diplom//OrigImage//Pronation"
 
 # Новое имя для файлов и расширение
 NAME_P: str = 'pronation'

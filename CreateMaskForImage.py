@@ -14,9 +14,12 @@
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-
+"""
+    Формирование маски для изображений.
+    Для НС, которая выделяет объект.
+"""
 # Путь к изображению
-image_path = 'BigFootBackupForMasks/images_remove_bg_1/pronation.1.png'
+image_path = 'BigFootBackupForMasks/images_remove_bg_1/'
 
 # Загрузка изображения
 image = Image.open(image_path)
