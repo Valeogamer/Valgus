@@ -30,14 +30,14 @@ if __name__ == '__main__':
     # Этап формирования датасета
     # Note: Пока не совсем понятно какой объект должен конвертировать изображение в матрицу numpy.array
     # Конвертирование изображения в матрицу (numpy.array)
-    file_manager.create_path_dir_list()
-    file_manager.update_result_data()
-    imgs_data_overpronation = img_aug.convert_images_to_array(file_manager.result_path_dir_overpronation)
-    imgs_data_pronation = img_aug.convert_images_to_array(file_manager.result_path_dir_pronation)
-
-    # Изменение размера изображений
-    imgs_data_overpronation = img_aug.resized_images(256, 256, imgs_data_overpronation)
-    imgs_data_pronation = img_aug.resized_images(256, 256, imgs_data_pronation)
+    # file_manager.create_path_dir_list()
+    # file_manager.update_result_data()
+    # imgs_data_overpronation = img_aug.convert_images_to_array(file_manager.result_path_dir_overpronation)
+    # imgs_data_pronation = img_aug.convert_images_to_array(file_manager.result_path_dir_pronation)
+    #
+    # # Изменение размера изображений
+    # imgs_data_overpronation = img_aug.resized_images(256, 256, imgs_data_overpronation)
+    # imgs_data_pronation = img_aug.resized_images(256, 256, imgs_data_pronation)
 
     # Присвоение меток классам
     # overpronation_labels = [0] * len(imgs_data_overpronation)
