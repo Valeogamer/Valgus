@@ -13,8 +13,8 @@ def remove_my_bg():
     """
     Удаление заднего фона из изображений
     """
-    input_folder = 'dataset_images/'
-    output_folder = 'images_remove_bg/'
+    input_folder = "images_remove_bg_2/"
+    output_folder = 'images_remove/'
     masks = 'masks/'
 
     # Проверяем, существует ли папка для выходных изображений, и создаем ее, если не существует
@@ -28,9 +28,12 @@ def remove_my_bg():
         input_path = os.path.join(input_folder, filename)
         output_path = os.path.join(output_folder, f'{filename[:-4]}.png')
         input_image = Image.open(input_path)
-        # input_image = input_image.convert("L") # перевод в чб
-        output_image = remove(input_image)
-        output_image.save(output_path)
+        input_image = input_image.convert("L") # перевод в чб
+        # output_image = remove(input_image)
+        # output_image.save(output_path)
+        threshold = 25
+        thresholded_mask = input_image.point(lambda p: p > threshold and 255)
+        thresholded_mask.save(output_path)
 
 # Вызываем функцию для удаления задних фонов
 remove_my_bg()

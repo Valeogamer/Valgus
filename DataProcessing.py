@@ -1,9 +1,7 @@
 from PIL import Image, ImageEnhance, ImageFilter
 import matplotlib.pyplot as plt
-import tensorflow as tf
 import typing as tp
 import numpy as np
-import Constants
 import pickle
 import cv2
 import os
@@ -14,18 +12,31 @@ class FileManager:
     Менеджер файлов
     """
 
-    def __init__(self):
+    def __init__(self, path_dir, path_dir_p, path_dir_o, new_n_p, new_n_o, extention, new_path_dir, new_path_dir_o,
+                 new_path_dir_p):
         # ToDo некоторые атрибуты должны быть protected
-        self.path_dir = Constants.PATH_DIR
-        self.path_dir_pronation: str = Constants.PATH_DIR_P
-        self.path_dir_overpronation: str = Constants.PATH_DIR_O
-        self.new_name_pronation: str = Constants.NAME_P
-        self.new_name_overpronation: str = Constants.NAME_O
-        self.extention: str = Constants.EXTENTION_PNG
+        self.path_dir: tp.Optional[str] = path_dir  # Constants.PATH_DIR
+        self.path_dir_pronation: tp.Optional[str] = path_dir_p  # Constants.PATH_DIR_P
+        self.path_dir_overpronation: tp.Optional[str] = path_dir_o  # Constants.PATH_DIR_O
+        self.new_name_pronation: tp.Optional[str] = new_n_p  # Constants.NAME_P
+        self.new_name_overpronation: tp.Optional[str] = new_n_o  # Constants.NAME_O
+        self.extention: tp.Optional[str] = extention  # Constants.EXTENTION_PNG
+        self.new_path_dir: tp.Optional[str] = new_path_dir
+        self.new_path_dir_o: tp.Optional[str] = new_path_dir_o
+        self.new_path_dir_p: tp.Optional[str] = new_path_dir_p
         self.path_dir_list_pronation: tp.Optional[list[str]] = None
         self.path_dir_list_overpronation: tp.Optional[list[str]] = None
         self.len_data_pronation: tp.Optional[int] = None
         self.len_data_overpronation: tp.Optional[int] = None
+        self.result_path_dir_pronation: tp.Optional[int] = None
+        self.result_path_dir_overpronation: tp.Optional[int] = None
+        self.len_name: int = 0
+        if not os.path.exists(new_path_dir):
+            os.makedirs(new_path_dir)
+            if not os.path.exists(new_path_dir_o):
+                os.makedirs(new_path_dir_o)
+            if not os.path.exists(new_path_dir_p):
+                os.makedirs(new_path_dir_p)
         if self.path_dir_pronation and self.path_dir_overpronation:
             self.create_path_dir_list()
         if self.path_dir_list_pronation != None:
@@ -54,7 +65,7 @@ class FileManager:
         """
         images_path = [path_dir + '//' + i for i in os.listdir(path_dir)]
         for i in range(1, len(images_path) + 1):
-            os.rename(images_path[i - 1], f'{path_dir + "//" + "new_" +new_name}.{i}{extention}')
+            os.rename(images_path[i - 1], f'{path_dir + "//" + "new_" + new_name}.{i}{extention}')
 
     def create_path_dir_list(self):
         """
@@ -66,6 +77,14 @@ class FileManager:
         self.path_dir_list_pronation = [self.path_dir_pronation + '//' + i for i in os.listdir(self.path_dir_pronation)]
         self.path_dir_list_overpronation = [self.path_dir_overpronation + '//' + i for i in
                                             os.listdir(self.path_dir_overpronation)]
+
+    def update_result_data(self):
+        """
+        Количество полученных данных после обработки.
+        :return:
+        """
+        self.result_path_dir_pronation = [self.new_path_dir_p + '//' + i for i in os.listdir(self.new_path_dir_p)]
+        self.result_path_dir_overpronation = [self.new_path_dir_o + '//' + i for i in os.listdir(self.new_path_dir_o)]
 
 
 class CreateDatasetImages:
@@ -147,7 +166,7 @@ class CreateDatasetImages:
 
 class ImageAugmentorCV:
     """
-    Аугментация данных методами OpenCV
+    Аугментация данных методами
     """
 
     def __init__(self):
@@ -559,162 +578,54 @@ class ImageAugmentorPillow:
         return image.convert("L")
 
     def run_augmentor(self, file_manager: FileManager):
+        """
+        Запуск основных методов аугментации данных, по отдельности как для O, так и для P.
+        :param file_manager: менеджер файлов
+        :return:
+        """
         # ToDo Да понимаю, требует рефакторинга
         # аугментация pronation
         if len(file_manager.path_dir_list_pronation) > 0:
+            file_manager.len_name = 0
             for image_path in file_manager.path_dir_list_pronation:
                 list_aug_imgs = []
                 img = self.open_image(image_path)
-                list_aug_imgs.extend([self.blur(img), self.flip(img, 1), self.add_noise(img)])
+                img = img.resize((256, 256))
+                list_aug_imgs.extend([img, self.blur(img), self.flip(img, 1), self.add_noise(img)])
                 for image in list_aug_imgs:
-                    file_manager.len_data_pronation += 1
-                    self.save_image(image, save_path=file_manager.path_dir_pronation,
+                    self.save_image(image, save_path=file_manager.new_path_dir_p,
                                     name=file_manager.new_name_pronation + '.' + str(
-                                        file_manager.len_data_pronation) + file_manager.extention)
-                list_aug_imgs.append(img)
+                                        file_manager.len_name) + file_manager.extention)
+                    file_manager.len_name += 1
                 for l_img in list_aug_imgs:
                     rotate_list = []
                     rotate_list.extend(
                         [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180)])
                     for r_img in rotate_list:
-                        file_manager.len_data_pronation += 1
-                        self.save_image(r_img, save_path=file_manager.path_dir_pronation,
+                        self.save_image(r_img, save_path=file_manager.new_path_dir_p,
                                         name=file_manager.new_name_pronation + '.' + str(
-                                            file_manager.len_data_pronation) + file_manager.extention)
+                                            file_manager.len_name) + file_manager.extention)
+                        file_manager.len_name += 1
 
         # аугментация overpronation
         if len(file_manager.path_dir_list_overpronation) > 0:
+            file_manager.len_name = 0
             for image_path in file_manager.path_dir_list_overpronation:
                 list_aug_imgs = []
                 img = self.open_image(image_path)
-                list_aug_imgs.extend([self.blur(img), self.flip(img, 1), self.add_noise(img)])
+                img = img.resize((256, 256))
+                list_aug_imgs.extend([img, self.blur(img), self.flip(img, 1), self.add_noise(img)])
                 for image in list_aug_imgs:
-                    file_manager.len_data_overpronation += 1
-                    self.save_image(image, save_path=file_manager.path_dir_overpronation,
+                    self.save_image(image, save_path=file_manager.new_path_dir_o,
                                     name=file_manager.new_name_overpronation + '.' + str(
-                                        file_manager.len_data_overpronation) + file_manager.extention)
-                list_aug_imgs.append(img)
+                                        file_manager.len_name) + file_manager.extention)
+                    file_manager.len_name += 1
                 for l_img in list_aug_imgs:
                     rotate_list = []
                     rotate_list.extend(
                         [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180)])
                     for r_img in rotate_list:
-                        file_manager.len_data_overpronation += 1
-                        self.save_image(r_img, save_path=file_manager.path_dir_overpronation,
+                        self.save_image(r_img, save_path=file_manager.new_path_dir_o,
                                         name=file_manager.new_name_overpronation + '.' + str(
-                                            file_manager.len_data_overpronation) + file_manager.extention)
-
-
-class ImageAugmentorTF:
-    """
-    Аугментация данных методами TF.Image
-    ! Слишком сильно зависим от версии
-    И проще использовать TF методы для аугментации при сборке модели НС,
-    чем в локальной части конвейера.
-    """
-
-    def __init__(self):
-        pass
-
-
-# Пример использования класса
-if __name__ == "__main__":
-    pass
-    # new_name_Pronation = 'pronation'
-    # new_name_Overpronation = 'overpronation'
-    # new_extention = 'png'
-    # path_dir_Pronation = "c://Users//User//Desktop//Разметка Тесты//BigFootBalance//Pronation"
-    # path_dir_Overpronation = "c://Users//User//Desktop//Разметка Тесты//BigFootBalance//Overpronation"
-    # # newName_newExtention(path_dir_Pronation, new_name_Pronation, new_extention)
-    # # newName_newExtention(path_dir_Overpronation, new_name_Overpronation, new_extention)
-    # images_path_Pronation = [path_dir_Pronation + '//' + i for i in os.listdir(path_dir_Pronation)]
-    # images_path_Overpronation = [path_dir_Overpronation + '//' + i for i in os.listdir(path_dir_Overpronation)]
-    # images_data_Overpronation = convert_images_to_array(images_path_Overpronation)
-    # images_data_Pronation = convert_images_to_array(images_path_Pronation)
-    # images_data_Overpronation = resized_images(256, 256, images_data_Overpronation)
-    # images_data_Pronation = resized_images(256, 256, images_data_Pronation)
-    # # visualization(images_data_Pronation[0])
-    # overpronation_labels = [0] * len(images_data_Overpronation)
-    # pronation_labels = [1] * len(images_data_Pronation)
-    # data = images_data_Overpronation + images_data_Pronation
-    # labels = overpronation_labels + pronation_labels
-    # data, labels = shuffle(data, labels, random_state=42)
-    # save(data=data, name='data')
-    # save(data=labels, name='labels')
-    # data_n = load('data.npy')
-    # data_p = load('data.pkl')
-    # labels_n = load('labels.npy')
-    # labels_p = load('labels.pkl')
-    # print()
-    #
-    # start = pw  # Выбор кейса
-    # if start is cv:
-    #     # Загрузка изображения
-    #     image: np.ndarray = cv2.imread("TestImages/Foot.png")
-    #
-    #     # Создание объекта класса
-    #     augmentor = ImageAugmentorCV()
-    #
-    #     # Применение методов аугментации
-    #     rotated_image = augmentor.rotate(image, 30)
-    #     flipped_image = augmentor.flip(image, 1)  # 1 для отражения по вертикали
-    #     scaled_image = augmentor.scale(image, 1.5)
-    #     translated_image = augmentor.translate(image, 50, -30)
-    #     brightened_image = augmentor.adjust_brightness(image, 1.5)
-    #     contrasted_image = augmentor.adjust_contrast(image, 1.5)
-    #     noisy_image = augmentor.add_noise(image)
-    #     cropped_image = augmentor.crop(image, 100, 50, 300, 200)
-    #     color_augmented_image = augmentor.color_augmentation(image)
-    #     blurred_image = augmentor.blur(image)
-    #     gamma_adjusted_image = augmentor.gamma_adjustment(image, gamma=0.8)
-    #     # Сохранение изображений
-    #     augmentor.save_image(rotated_image, "rotated_image.jpg")
-    #     augmentor.save_image(flipped_image, "flipped_image.jpg")
-    #     augmentor.save_image(scaled_image, "scaled_image.jpg")
-    #     augmentor.save_image(translated_image, "translated_image.jpg")
-    #     augmentor.save_image(brightened_image, "brightened_image.jpg")
-    #     augmentor.save_image(contrasted_image, "contrasted_image.jpg")
-    #     augmentor.save_image(noisy_image, "noisy_image.jpg")
-    #     augmentor.save_image(cropped_image, "cropped_image.jpg")
-    #     augmentor.save_image(color_augmented_image, "color_augmented_image.jpg")
-    #     augmentor.save_image(blurred_image, "blurred_image.jpg")
-    #     augmentor.save_image(gamma_adjusted_image, "gamma_adjusted_image.jpg")
-    # elif start is pw:
-    #     # Pillow
-    #     # Загрузка изображения
-    #     image_path = "TestImages/Foot.png"
-    #     image_pillow = Image.open(image_path)  # :PIL.ImagePlugin(jpeg, png, ...)
-    #
-    #     # Создание объекта класса
-    #     augmentor_pillow = ImageAugmentorPillow()
-    #
-    #     # Применение методов аугментации
-    #     rotated_image_pillow = augmentor_pillow.rotate(image_pillow, 30)
-    #     flipped_image_pillow = augmentor_pillow.flip(image_pillow, 1)  # 1 для отражения по вертикали
-    #     scaled_image_pillow = augmentor_pillow.scale(image_pillow, 1.5)
-    #     translated_image_pillow = augmentor_pillow.translate(image_pillow, 50, -30)
-    #     brightened_image_pillow = augmentor_pillow.adjust_brightness(image_pillow, 1.5)
-    #     contrasted_image_pillow = augmentor_pillow.adjust_contrast(image_pillow, 1.5)
-    #     noisy_image_pillow = augmentor_pillow.add_noise(image_pillow)
-    #     cropped_image_pillow = augmentor_pillow.crop(image_pillow, 100, 50, 300, 200)
-    #     color_augmented_image_pillow = augmentor_pillow.color_augmentation(image_pillow)
-    #     blurred_image_pillow = augmentor_pillow.blur(image_pillow)
-    #     gamma_adjusted_image_pillow = augmentor_pillow.gamma_adjustment(image_pillow, gamma=0.8)
-    #     # Сохранение изображений
-    #     augmentor_pillow.save_image(rotated_image_pillow, "rotated_image.jpg")
-    #     augmentor_pillow.save_image(flipped_image_pillow, "flipped_image.jpg")
-    #     augmentor_pillow.save_image(scaled_image_pillow, "scaled_image.jpg")
-    #     augmentor_pillow.save_image(translated_image_pillow, "translated_image.jpg")
-    #     augmentor_pillow.save_image(brightened_image_pillow, "brightened_image.jpg")
-    #     augmentor_pillow.save_image(contrasted_image_pillow, "contrasted_image.jpg")
-    #     augmentor_pillow.save_image(noisy_image_pillow, "noisy_image.jpg")
-    #     augmentor_pillow.save_image(cropped_image_pillow, "cropped_image.jpg")
-    #     augmentor_pillow.save_image(color_augmented_image_pillow, "color_augmented_image.jpg")
-    #     augmentor_pillow.save_image(blurred_image_pillow, "blurred_image.jpg")
-    #     augmentor_pillow.save_image(gamma_adjusted_image_pillow, "gamma_adjusted_image.jpg")
-    # elif start is tfi:
-    #     raise NotImplementedError
-    # elif start is None:
-    #     print("Не выбран кейс!")
-    # else:
-    #     raise Exception("Ошибка, потерян start")
+                                            file_manager.len_name) + file_manager.extention)
+                        file_manager.len_name += 1
