@@ -9,4 +9,7 @@
 /masks/
 /TestImages/
 /Notes.md
-/BigFootBackupForMasks/
+/BigFootBackupForMasks/!/models/ac76a274-f48f-4086-83a0-86afa6fc0b02.pt
+!/models/trainyolo-yolov8-keypoints.ipynb
+!/models/ValSegmentFootU-net.ipynb
+!/OpenCVMethods/000112.png
