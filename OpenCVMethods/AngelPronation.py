@@ -1,11 +1,11 @@
 import cv2
 import matplotlib.pyplot as plt
-
+import math
 
 class Foot:
-    y_top_params = 45
+    y_top_params = 60
     y_middle_params = 25
-    y_bottom_params = 5
+    y_bottom_params = 4
     image = None
     gray = None
     countours = None
@@ -100,6 +100,26 @@ class Foot:
             self.x_middle = int((x_all_coords[1][2] + x_all_coords[1][3]) / 2)
             self.x_bottom = int((x_all_coords[2][2] + x_all_coords[2][3]) / 2)
 
+    def angle_between_vectors(self, x1, y1, x2, y2, x3, y3):
+        # Находим координаты векторов AB и BC
+        vec_ab = (x2 - x1, y2 - y1)
+        vec_bc = (x3 - x2, y3 - y2)
+
+        # Вычисляем скалярное произведение векторов AB и BC
+        dot_product = vec_ab[0] * vec_bc[0] + vec_ab[1] * vec_bc[1]
+
+        # Вычисляем длины векторов AB и BC
+        length_ab = math.sqrt((vec_ab[0] ** 2) + (vec_ab[1] ** 2))
+        length_bc = math.sqrt((vec_bc[0] ** 2) + (vec_bc[1] ** 2))
+
+        # Вычисляем угол между векторами в радианах
+        angle_rad = math.acos(dot_product / (length_ab * length_bc))
+
+        # Преобразуем радианы в градусы
+        angle_deg = math.degrees(angle_rad)
+
+        return angle_deg
+
     @staticmethod
     def run(left_foot, right_foot):
         """
@@ -127,18 +147,26 @@ class Foot:
             plt.plot(Foot.x_bottom, Foot.y_bottom, 'r*')
         else:
             # plt.plot(Foot.x_countours, Foot.y_countours)
-            plt.plot(left.x_top, left.y_top, 'r*')
-            plt.plot(left.x_middle, left.y_middle, 'g*')
-            plt.plot(left.x_bottom, left.y_bottom, 'r*')
-            plt.plot(right.x_top, right.y_top, 'r*')
-            plt.plot(right.x_middle, right.y_middle, 'g*')
-            plt.plot(right.x_bottom, right.y_bottom, 'r*')
+            # plt.plot(left.x_top, left.y_top, 'r*')
+            # plt.plot(left.x_middle, left.y_middle, 'g*')
+            # plt.plot(left.x_bottom, left.y_bottom, 'r*')
+            plt.plot([left.x_top, left.x_middle, left.x_bottom], [left.y_top, left.y_middle, left.y_bottom], '-ro')
+            # plt.plot(right.x_top, right.y_top, 'r*')
+            # plt.plot(right.x_middle, right.y_middle, 'g*')
+            # plt.plot(right.x_bottom, right.y_bottom, 'r*')
+            plt.plot([right.x_top, right.x_middle, right.x_bottom], [right.y_top, right.y_middle, right.y_bottom], '-co')
             plt.gca().invert_yaxis()
             plt.imshow(Foot.image)
+            left_angl = left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle,
+                                                  left_foot.y_middle, left_foot.x_bottom, left_foot.y_bottom)
+            right_angl = right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle,
+                                                   right_foot.y_middle, right_foot.x_bottom, right_foot.y_bottom)
+            plt.text(left.x_middle, left.y_middle, f'{int(left_angl)}', fontsize=15, color='blue', ha='right')
+            plt.text(right.x_middle, right.y_middle, f'{int(right_angl)}', fontsize=15, color='blue', ha='left')
             plt.show()
 
 
-def image_to_countors(img: str, tresh_begin: int = 15, tresh_end: int = 255):
+def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
     """
     Определение контура изображения.
     :param img: путь до изображения
@@ -152,11 +180,12 @@ def image_to_countors(img: str, tresh_begin: int = 15, tresh_end: int = 255):
     _, binary = cv2.threshold(gray, tresh_begin, tresh_end, cv2.THRESH_BINARY)
     countours, hierarhy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     image = cv2.drawContours(image, countours, -1, (0, 255, 0), 2)
+
     return countours, gray, image
 
 
 if __name__ == '__main__':
-    img_path: str = '000112.png'
+    img_path: str = '0003.png'
     Foot.countours, Foot.gray, Foot.image = image_to_countors(img_path)
     left_foot = Foot("left")
     right_foot = Foot("right")
@@ -175,6 +204,8 @@ if __name__ == '__main__':
                 Foot.x_countours.append(foot[0][0])
                 Foot.y_countours.append(foot[0][-1])
     Foot.run(left_foot, right_foot)
+    print(left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle, left_foot.y_middle, left_foot.x_bottom, left_foot.y_bottom))
+    print(right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle, right_foot.y_middle, right_foot.x_bottom, right_foot.y_bottom))
 
     # image = cv2.imread('000128.png')
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
