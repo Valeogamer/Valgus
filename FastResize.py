@@ -2,7 +2,7 @@ from PIL import Image
 import os
 
 # Путь к каталогу с изображениями
-directory = "C://Diplom//AllFootSize640//"
+directory = "C://Users//Valentin//Desktop//320x320//"
 
 # Получаем список всех файлов в каталоге
 files = os.listdir(directory)
@@ -16,7 +16,7 @@ for file in files:
         img = Image.open(image_path)
 
         # Изменяем размер до 640x640
-        img_resized = img.resize((640, 640))
+        img_resized = img.resize((320, 320))
 
         # Сохраняем измененное изображение с тем же именем
         img_resized.save(image_path)

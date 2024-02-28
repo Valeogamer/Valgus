@@ -445,7 +445,7 @@ class ImageAugmentorPillow:
         :param angle: Угол вращения
         :return: изображение, перевернутое на заданный угол
         """
-        return image.rotate(angle)
+        return image.rotate(angle, expand=True)
 
     def flip(self, image, flip_type: int):
         """
@@ -494,11 +494,12 @@ class ImageAugmentorPillow:
         (factor < 1) - яркость ниже
         :return: измененное по яркости изображение
         """
-        enhancer = ImageEnhance.Brightness(image)
+        enhancer = ImageEnhance.Sharpness(image)
         return enhancer.enhance(factor)
 
     def adjust_contrast(self, image, factor: float):
         """
+        1.2 и 0.4
         Изменение контраста изображения
         :param image: Изображение
         :param factor: регулировка контраста
@@ -586,46 +587,58 @@ class ImageAugmentorPillow:
         # ToDo Да понимаю, требует рефакторинга
         # аугментация pronation
         if len(file_manager.path_dir_list_pronation) > 0:
-            file_manager.len_name = 0
+            file_manager.len_name = 1
             for image_path in file_manager.path_dir_list_pronation:
                 list_aug_imgs = []
                 img = self.open_image(image_path)
-                img = img.resize((256, 256))
-                list_aug_imgs.extend([img, self.blur(img), self.flip(img, 1), self.add_noise(img)])
+                # img = img.resize((640, 640))
+                list_aug_imgs.extend(
+                    [img, self.blur(img), self.flip(img, 1), self.add_noise(img), self.adjust_brightness(img, 5.0),
+                     self.adjust_brightness(img, -5.0), self.adjust_contrast(img, 0.4),
+                     self.adjust_contrast(img, 1.2)])
                 for image in list_aug_imgs:
+                    image = image.resize((640, 640))
                     self.save_image(image, save_path=file_manager.new_path_dir_p,
-                                    name=file_manager.new_name_pronation + '.' + str(
+                                    name=file_manager.new_name_pronation + str(
                                         file_manager.len_name) + file_manager.extention)
                     file_manager.len_name += 1
                 for l_img in list_aug_imgs:
                     rotate_list = []
                     rotate_list.extend(
-                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180)])
+                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180),
+                         self.rotate(l_img, 45), self.rotate(l_img, -45), self.rotate(l_img, 135),
+                         self.rotate(l_img, 225)])
                     for r_img in rotate_list:
+                        r_img = r_img.resize((640, 640))
                         self.save_image(r_img, save_path=file_manager.new_path_dir_p,
-                                        name=file_manager.new_name_pronation + '.' + str(
+                                        name=file_manager.new_name_pronation + str(
                                             file_manager.len_name) + file_manager.extention)
                         file_manager.len_name += 1
 
         # аугментация overpronation
         if len(file_manager.path_dir_list_overpronation) > 0:
-            file_manager.len_name = 0
+            file_manager.len_name = 1
             for image_path in file_manager.path_dir_list_overpronation:
                 list_aug_imgs = []
                 img = self.open_image(image_path)
-                img = img.resize((256, 256))
-                list_aug_imgs.extend([img, self.blur(img), self.flip(img, 1), self.add_noise(img)])
+                # img = img.resize((640, 640))
+                list_aug_imgs.extend(
+                    [img, img, self.flip(img, 1), img, img, img, img, img])
                 for image in list_aug_imgs:
+                    image = image.resize((640, 640))
                     self.save_image(image, save_path=file_manager.new_path_dir_o,
-                                    name=file_manager.new_name_overpronation + '.' + str(
+                                    name=file_manager.new_name_overpronation + str(
                                         file_manager.len_name) + file_manager.extention)
                     file_manager.len_name += 1
                 for l_img in list_aug_imgs:
                     rotate_list = []
                     rotate_list.extend(
-                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180)])
+                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180),
+                         self.rotate(l_img, 45), self.rotate(l_img, -45), self.rotate(l_img, 135),
+                         self.rotate(l_img, 225)])
                     for r_img in rotate_list:
+                        r_img = r_img.resize((640, 640))
                         self.save_image(r_img, save_path=file_manager.new_path_dir_o,
-                                        name=file_manager.new_name_overpronation + '.' + str(
+                                        name=file_manager.new_name_overpronation + str(
                                             file_manager.len_name) + file_manager.extention)
                         file_manager.len_name += 1
