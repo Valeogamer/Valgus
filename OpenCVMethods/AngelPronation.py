@@ -2,10 +2,11 @@ import cv2
 import matplotlib.pyplot as plt
 import math
 
+
 class Foot:
     y_top_params = 60
     y_middle_params = 25
-    y_bottom_params = 4
+    y_bottom_params = 2
     image = None
     gray = None
     countours = None
@@ -19,7 +20,7 @@ class Foot:
         self.y_coords: list = []  # координаты контура
         self.y_max: int = 0  # макс по Y контура
         self.y_min: int = 0  # мин по Y контура
-        self.y_delta: int = 0  # длина высоты
+        self.y_delta: int = 0  # длина по вертикали
         self.y_top_params: int = 60  # % вверхней части
         self.y_middle_params: int = 30  # % средней части
         self.y_bottom_params: int = 10  # % нижней части
@@ -55,10 +56,11 @@ class Foot:
         Поиск опорной точки по оси Y
         """
         self.ymax_ymin()
-        self.parameters(top=60, middle=30, bottom=10)
-        self.y_bottom = int(self.y_max - int(self.y_delta * Foot.y_top_params) / 100)
-        self.y_middle = int(self.y_max - int(self.y_delta * Foot.y_middle_params) / 100)
-        self.y_top = int(self.y_max - int(self.y_delta * Foot.y_bottom_params) / 100)
+        self.parameters(top=70, middle=25, bottom=2)
+        self.y_top = int(self.y_max - (int(self.y_delta * self.y_top_params) / 100))
+        self.y_middle = int(self.y_max - (int(self.y_delta * self.y_middle_params) / 100))
+        self.y_bottom = int(self.y_max - (int(self.y_delta * self.y_bottom_params) / 100))
+        # self.y_bottom = int(self.y_max - 10)
         self.y_list_values.append(Foot.gray[int(self.y_top)])
         self.y_list_values.append(Foot.gray[int(self.y_middle)])
         self.y_list_values.append(Foot.gray[int(self.y_bottom)])
@@ -92,13 +94,13 @@ class Foot:
                     break
             x_all_coords.append(x_coords)
         if self.type == "left":
-            self.x_top = int((x_all_coords[0][0] + x_all_coords[0][1]) / 2)
-            self.x_middle = int((x_all_coords[1][0] + x_all_coords[1][1]) / 2)
-            self.x_bottom = int((x_all_coords[2][0] + x_all_coords[2][1]) / 2)
+            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2))
+            self.x_middle = int(((x_all_coords[1][0] + x_all_coords[1][1]) / 2))
+            self.x_bottom = int(((x_all_coords[2][0] + x_all_coords[2][1]) / 2))
         else:
             self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2)
             self.x_middle = int((x_all_coords[1][2] + x_all_coords[1][3]) / 2)
-            self.x_bottom = int((x_all_coords[2][2] + x_all_coords[2][3]) / 2)
+            self.x_bottom = int(((x_all_coords[2][2] + x_all_coords[2][3]) / 2))
 
     def angle_between_vectors(self, x1, y1, x2, y2, x3, y3):
         # Находим координаты векторов AB и BC
@@ -147,26 +149,31 @@ class Foot:
             plt.plot(Foot.x_bottom, Foot.y_bottom, 'r*')
         else:
             # plt.plot(Foot.x_countours, Foot.y_countours)
-            # plt.plot(left.x_top, left.y_top, 'r*')
-            # plt.plot(left.x_middle, left.y_middle, 'g*')
-            # plt.plot(left.x_bottom, left.y_bottom, 'r*')
+            plt.plot(left.x_top, left.y_top, 'r*')
+            plt.plot(left.x_middle, left.y_middle, 'g*')
+            plt.plot(left.x_bottom, left.y_bottom, 'r*')
             plt.plot([left.x_top, left.x_middle, left.x_bottom], [left.y_top, left.y_middle, left.y_bottom], '-ro')
-            # plt.plot(right.x_top, right.y_top, 'r*')
-            # plt.plot(right.x_middle, right.y_middle, 'g*')
-            # plt.plot(right.x_bottom, right.y_bottom, 'r*')
-            plt.plot([right.x_top, right.x_middle, right.x_bottom], [right.y_top, right.y_middle, right.y_bottom], '-co')
+            plt.plot(right.x_top, right.y_top, 'r*')
+            plt.plot(right.x_middle, right.y_middle, 'g*')
+            plt.plot(right.x_bottom, right.y_bottom, 'r*')
+            plt.plot([right.x_top, right.x_middle, right.x_bottom], [right.y_top, right.y_middle, right.y_bottom],
+                     '-co')
             plt.gca().invert_yaxis()
             plt.imshow(Foot.image)
             left_angl = left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle,
-                                                  left_foot.y_middle, left_foot.x_bottom, left_foot.y_bottom)
+                                                        left_foot.y_middle, left_foot.x_bottom, left_foot.y_bottom)
             right_angl = right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle,
-                                                   right_foot.y_middle, right_foot.x_bottom, right_foot.y_bottom)
-            plt.text(left.x_middle, left.y_middle, f'{int(left_angl)}', fontsize=15, color='blue', ha='right')
-            plt.text(right.x_middle, right.y_middle, f'{int(right_angl)}', fontsize=15, color='blue', ha='left')
+                                                          right_foot.y_middle, right_foot.x_bottom, right_foot.y_bottom)
+            # plt.text(left.x_middle, left.y_middle, f'{int(left_angl)}', fontsize=15, color='blue', ha='right')
+            # plt.text(right.x_middle, right.y_middle, f'{int(right_angl)}', fontsize=15, color='blue', ha='left')
+            # plt.xticks([])
+            # plt.yticks([])
+            plt.xlabel("Ось X")
+            plt.ylabel("Ось Y")
             plt.show()
 
 
-def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
+def image_to_countors(img: str, tresh_begin: int = 15, tresh_end: int = 255):
     """
     Определение контура изображения.
     :param img: путь до изображения
@@ -185,7 +192,7 @@ def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
 
 
 if __name__ == '__main__':
-    img_path: str = '0003.png'
+    img_path: str = '0008.png'
     Foot.countours, Foot.gray, Foot.image = image_to_countors(img_path)
     left_foot = Foot("left")
     right_foot = Foot("right")
@@ -194,18 +201,20 @@ if __name__ == '__main__':
     for indx in range(len(Foot.countours)):
         for foot in Foot.countours[indx]:
             if indx == 0:
-                left_foot.x_coords.append(foot[0][0])
-                left_foot.y_coords.append(foot[0][-1])
-                Foot.x_countours.append(foot[0][0])
-                Foot.y_countours.append(foot[0][-1])
-            else:
                 right_foot.x_coords.append(foot[0][0])
                 right_foot.y_coords.append(foot[0][-1])
                 Foot.x_countours.append(foot[0][0])
                 Foot.y_countours.append(foot[0][-1])
+            else:
+                left_foot.x_coords.append(foot[0][0])
+                left_foot.y_coords.append(foot[0][-1])
+                Foot.x_countours.append(foot[0][0])
+                Foot.y_countours.append(foot[0][-1])
     Foot.run(left_foot, right_foot)
-    print(left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle, left_foot.y_middle, left_foot.x_bottom, left_foot.y_bottom))
-    print(right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle, right_foot.y_middle, right_foot.x_bottom, right_foot.y_bottom))
+    print(left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle, left_foot.y_middle,
+                                          left_foot.x_bottom, left_foot.y_bottom))
+    print(right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle, right_foot.y_middle,
+                                           right_foot.x_bottom, right_foot.y_bottom))
 
     # image = cv2.imread('000128.png')
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
