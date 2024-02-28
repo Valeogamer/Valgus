@@ -59,8 +59,8 @@ class Foot:
         self.parameters(top=70, middle=25, bottom=2)
         self.y_top = int(self.y_max - (int(self.y_delta * self.y_top_params) / 100))
         self.y_middle = int(self.y_max - (int(self.y_delta * self.y_middle_params) / 100))
-        self.y_bottom = int(self.y_max - (int(self.y_delta * self.y_bottom_params) / 100))
-        # self.y_bottom = int(self.y_max - 10)
+        # self.y_bottom = int(self.y_max - (int(self.y_delta * self.y_bottom_params) / 100))
+        self.y_bottom = int(self.y_max - 10)
         self.y_list_values.append(Foot.gray[int(self.y_top)])
         self.y_list_values.append(Foot.gray[int(self.y_middle)])
         self.y_list_values.append(Foot.gray[int(self.y_bottom)])
@@ -100,7 +100,10 @@ class Foot:
         else:
             self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2)
             self.x_middle = int((x_all_coords[1][2] + x_all_coords[1][3]) / 2)
-            self.x_bottom = int(((x_all_coords[2][2] + x_all_coords[2][3]) / 2))
+            if len(x_all_coords[2]) > 2:
+                self.x_bottom = int(((x_all_coords[2][2] + x_all_coords[2][3]) / 2))
+            else:
+                self.x_bottom = int(((x_all_coords[2][0] + x_all_coords[2][1]) / 2))
 
     def angle_between_vectors(self, x1, y1, x2, y2, x3, y3):
         # Находим координаты векторов AB и BC
