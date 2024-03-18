@@ -43,7 +43,7 @@ class Foot:
         self.y_min = min(self.y_coords)
         self.y_delta = int(abs(self.y_max - self.y_min))
 
-    def parameters(self, top: int = 60, middle: int = 30, bottom: int = 10):
+    def parameters(self, top: int = 60, middle: int = 35, bottom: int = 10):
         """
         Параметры пропорции.
         """
@@ -56,11 +56,11 @@ class Foot:
         Поиск опорной точки по оси Y
         """
         self.ymax_ymin()
-        self.parameters(top=70, middle=25, bottom=2)
+        self.parameters(top=70, middle=25, bottom=1)
         self.y_top = int(self.y_max - (int(self.y_delta * self.y_top_params) / 100))
         self.y_middle = int(self.y_max - (int(self.y_delta * self.y_middle_params) / 100))
-        # self.y_bottom = int(self.y_max - (int(self.y_delta * self.y_bottom_params) / 100))
-        self.y_bottom = int(self.y_max - 10)
+        self.y_bottom = int(self.y_max - (int(self.y_delta * self.y_bottom_params) / 100))
+        # self.y_bottom = int(self.y_max - 10)
         self.y_list_values.append(Foot.gray[int(self.y_top)])
         self.y_list_values.append(Foot.gray[int(self.y_middle)])
         self.y_list_values.append(Foot.gray[int(self.y_bottom)])
@@ -94,11 +94,13 @@ class Foot:
                     break
             x_all_coords.append(x_coords)
         if self.type == "left":
-            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2))
+            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2) + ((10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100)) # 60%40
+            # self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2)) # 50%50
             self.x_middle = int(((x_all_coords[1][0] + x_all_coords[1][1]) / 2))
             self.x_bottom = int(((x_all_coords[2][0] + x_all_coords[2][1]) / 2))
         else:
-            self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2)
+            self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 - ((10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 40%60
+            # self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 )  # 50%50
             self.x_middle = int((x_all_coords[1][2] + x_all_coords[1][3]) / 2)
             if len(x_all_coords[2]) > 2:
                 self.x_bottom = int(((x_all_coords[2][2] + x_all_coords[2][3]) / 2))
@@ -176,7 +178,7 @@ class Foot:
             plt.show()
 
 
-def image_to_countors(img: str, tresh_begin: int = 15, tresh_end: int = 255):
+def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
     """
     Определение контура изображения.
     :param img: путь до изображения
@@ -195,7 +197,7 @@ def image_to_countors(img: str, tresh_begin: int = 15, tresh_end: int = 255):
 
 
 if __name__ == '__main__':
-    img_path: str = '0008.png'
+    img_path: str = 'result.png'
     Foot.countours, Foot.gray, Foot.image = image_to_countors(img_path)
     left_foot = Foot("left")
     right_foot = Foot("right")
@@ -218,70 +220,3 @@ if __name__ == '__main__':
                                           left_foot.x_bottom, left_foot.y_bottom))
     print(right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle, right_foot.y_middle,
                                            right_foot.x_bottom, right_foot.y_bottom))
-
-    # image = cv2.imread('000128.png')
-    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    # _, binary = cv2.threshold(gray, 15, 255, cv2.THRESH_BINARY)
-    # countours, hierarhy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # image = cv2.drawContours(image, countours, -1, (0, 255, 0), 2)
-    # x, y = [], []
-    # for i in countours:
-    #     for j in i:
-    #         for k in j:
-    #             x.append(k[0])
-    #             y.append(k[-1])
-    # y_min = min(y)  # минимум по координате Y
-    # y_max = max(y)  # максимум по координате Y
-    # y_delta = max(y) - min(y)  # разница между мин макс
-    # # схема 10 - 30 - 60
-    # y_1 = int(y_max - y_delta / 10)  # 10%
-    # y_2 = int(y_max - y_delta * 1 / 3)  # 30%
-    # y_3 = int(y_max - y_delta * 2 / 3)  # 60%
-    # # После того как вычилслили оси y_1,2,3, необходимо определить Х, на каждой оси их по 2.
-    # arrs = []
-    # arrs.append(gray[y_1])
-    # arrs.append(gray[y_2])
-    # arrs.append(gray[y_3])
-    # x_all_coords = []
-    # for arr in arrs:
-    #     x_coords = []
-    #     cnt_exit = 0
-    #     left_border = True
-    #     right_border = False
-    #     for i in range(1, len(arr) - 1):
-    #         if left_border:
-    #             # if arr[i - 1] < 10 and arr[i - 1] != 0 and arr[i - 1] != 1 and arr[i + 1] > arr[i]:
-    #             if arr[i] > 10:
-    #                 x_coords.append(i)
-    #                 left_border = False
-    #                 right_border = True
-    #                 cnt_exit += 1
-    #         if right_border:
-    #             # if arr[i - 1] >= arr[i] and (arr[i] == 0 or arr[i] == 1):
-    #             if arr[i] < 10:
-    #                 x_coords.append(i)
-    #                 left_border = True
-    #                 right_border = False
-    #                 cnt_exit += 1
-    #         if cnt_exit >= 4:
-    #             break
-    #     x_all_coords.append(x_coords)
-    # x_1_l = (x_all_coords[0][0] + x_all_coords[0][1]) / 2
-    # x_1_r = (x_all_coords[0][2] + x_all_coords[0][3]) / 2
-    #
-    # x_2_l = (x_all_coords[1][0] + x_all_coords[1][1]) / 2
-    # x_2_r = (x_all_coords[1][2] + x_all_coords[1][3]) / 2
-    #
-    # x_3_l = (x_all_coords[2][0] + x_all_coords[2][1]) / 2
-    # x_3_r = (x_all_coords[2][2] + x_all_coords[2][3]) / 2
-    # plt.plot(x, y)
-    # plt.plot(x_1_l, y_1, 'r*')
-    # plt.plot(x_1_r, y_1, 'r*')
-    # plt.plot(x_2_l, y_2, 'g*')
-    # plt.plot(x_2_r, y_2, 'g*')
-    # plt.plot(x_3_l, y_3, 'y*')
-    # plt.plot(x_3_r, y_3, 'y*')
-    # plt.gca().invert_yaxis()
-    # plt.imshow(image)
-    # plt.show()
