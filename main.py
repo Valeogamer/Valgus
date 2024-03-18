@@ -1,8 +1,10 @@
 from DataProcessing import FileManager, CreateDatasetImages, ImageAugmentorPillow
 from sklearn.utils import shuffle
 import Constants
+import time
 
 if __name__ == '__main__':
+    start_time = time.time()
     # Необходимые объекты
     file_manager = FileManager(path_dir=Constants.PATH_DIR, path_dir_p=Constants.PATH_DIR_P,
                                path_dir_o=Constants.PATH_DIR_O, new_n_p=Constants.NAME_P, new_n_o=Constants.NAME_O,
@@ -17,7 +19,9 @@ if __name__ == '__main__':
 
     # Аугментация данных.
     img_aug.run_augmentor(file_manager)
-
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print("Время выполнения:", execution_time, "секунд")
     # переименуем все файлы и поменяем расширение (исходные данные)
     # Note: По идее можно отказать от переименования, она нужна была если бы архитектура НС
     #  строилась с применением маски
