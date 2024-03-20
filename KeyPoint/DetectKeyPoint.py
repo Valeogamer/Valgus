@@ -5,7 +5,7 @@ from ultralytics import YOLO
 from PIL import Image
 model = YOLO('best.pt')
 
-results = model.predict("00537.png", conf=0.20)
+results = model.predict("masked_image_1.jpg", conf=0.20)
 
 print(results)
 r = results[0]

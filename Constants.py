@@ -1,29 +1,29 @@
-#  для запуска и выбора кейсов
+# Выбор библиотеки для аугментации данных
 CV: str = 'opencv'
 PW: str = 'pillow'
-TFI: str = 'tfimage'
-
+# P - Orig
+# O - Mask
 # Пути до файлов
 # ToDo Все пути отладочные временные
 # Путь до основных каталогов
 PATH_DIR = "C://Users//Valentin//Desktop"
-# путь до файлов содержащие данные здоровых
-PATH_DIR_P: str = "C://Users//Valentin//Desktop//640x640copy//"  # "C://Diplom//Savefoot//BigFootBackupForMasks//Pronation_1//MaskPronationGray"
-# путь до файлов содержащие данные больных
-PATH_DIR_O: str = "C://Users//Valentin//Desktop//MasksBincopy//"  # "C://Diplom//Savefoot//BigFootBackupForMasks//Overpronation_1//MaskOverpronationGray"
+# путь до файлов содержащие Оригинальные данные
+PATH_DIR_Orig: str = "C://Users//Valentin//Desktop//640x640copy//"  # путь до оригинала
+# путь до файлов содержащие Данные масок
+PATH_DIR_Mask: str = "C://Users//Valentin//Desktop//MasksBincopy//"  # путь до масок
 
-# Путь каталога для хранения папок
-NEW_PATH_DIR: str = "C://Users//Valentin//Desktop"
-NEW_PATH_DIR_O: str = "C://Users//Valentin//Desktop//NewMasksBinAug"
-NEW_PATH_DIR_P: str = "C://Users//Valentin//Desktop//New640x640Aug"
+# Пути для сохранения аргументированных данных
+NEW_PATH_DIR: str = "C://Users//Valentin//Desktop"  # основной путь до хранилища
+NEW_PATH_DIR_Mask: str = "C://Users//Valentin//Desktop//NewMasksBinAug"  # путь для сохранения аргументированных данных (масок)
+NEW_PATH_DIR_Orig: str = "C://Users//Valentin//Desktop//New640x640Aug"  # путь для сохранения аргументированных данных (оригинала)
 
-# Новое имя для файлов и расширение
-NAME_P: str = '000'
-NAME_O: str = '000'
+# Новое имя и рассширения для файлов
+NAME_Orig: str = '000'
+NAME_Mask: str = '000'
 EXTENTION_PNG: str = '.png'
 EXTENTION_JPG: str = '.jpg'
-NAME_P_E: str = NAME_P + EXTENTION_PNG
-NAME_O_E: str = NAME_O + EXTENTION_PNG
+NAME_Orig_E: str = NAME_Orig + EXTENTION_PNG
+NAME_Mask_E: str = NAME_Mask + EXTENTION_PNG
 # Размеры для стандартизации
 WIDTH: int = 640
 HEIGHT: int = 640

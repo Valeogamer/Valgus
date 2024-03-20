@@ -1,7 +1,10 @@
 import cv2
-import matplotlib.pyplot as plt
 import math
-
+import matplotlib
+matplotlib.use('Agg')
+# matplotlib.use('nbagg')  # Использовать бэкэнд для Jupyter Notebook
+# matplotlib.rcParams['backend'] = "Qt4Agg"
+import matplotlib.pyplot as plt
 
 class Foot:
     y_top_params = 60
@@ -197,7 +200,7 @@ def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
 
 
 if __name__ == '__main__':
-    img_path: str = 'result.png'
+    img_path: str = '000128.png'
     Foot.countours, Foot.gray, Foot.image = image_to_countors(img_path)
     left_foot = Foot("left")
     right_foot = Foot("right")
