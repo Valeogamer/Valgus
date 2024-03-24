@@ -1,6 +1,80 @@
-import cv2
-import math
+from tensorflow.keras.models import load_model
+from inference_sdk import InferenceHTTPClient
+from sklearn.preprocessing import Binarizer
+from matplotlib.patches import Polygon
 import matplotlib.pyplot as plt
+from ultralytics import YOLO
+import tensorflow as tf
+from PIL import Image
+import numpy as np
+import math
+import sys
+import cv2
+
+model = load_model('UnetModel/unet_model_other_foot.h5')
+IMAGE_SIZE = (640, 640)
+PLOTS_DPI = 150
+
+# модель отрезания пальцев которая лежит на roboflow
+CLIENT = InferenceHTTPClient(
+    api_url="https://detect.roboflow.com",
+    api_key="lgPDkrQGntDDfpcouQNN"
+)
+
+# model = YOLO('KeyPoint/best.pt')
+
+def load_test_image(filepath):
+    img = tf.io.read_file(filepath)
+    img = tf.io.decode_png(img, channels=3)
+    img = tf.image.resize(img, IMAGE_SIZE)
+    return img / 255.0
+
+
+def pred_unet(img_path):
+    """
+    Сегментация изображения
+    """
+    orig_imgs = [load_test_image(img_path)]
+    pred = model.predict(np.array(orig_imgs))
+    pred_mask = Binarizer(threshold=0.5).transform(pred.reshape(-1, 1)).reshape(pred.shape)
+    # Создаем директорию для сохранения изображений, если её еще нет
+    for i in range(len(orig_imgs)):
+        # Сохраняем исходное изображение
+        # plt.imshow(pred_imgs[i])
+        # plt.axis('off')
+        # plt.savefig(f'predictions/test_sample_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
+        # plt.close()
+        #
+        # # Сохраняем мягкую маску
+        # plt.imshow(pred[i], cmap='gray')
+        # plt.axis('off')
+        # plt.savefig(f'predictions/soft_mask_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
+        # plt.close()
+        #
+        # # Сохраняем бинарную маску
+        # plt.imshow(pred_mask[i], cmap='gray')
+        # plt.axis('off')
+        # plt.savefig(f'predictions/binary_mask_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
+        # plt.close()
+
+        # Сохраняем маскированное изображение
+        plt.imshow(orig_imgs[i] * pred_mask[i])
+        plt.axis('off')
+        plt.savefig(f'predictions/segment_image.jpg', bbox_inches='tight', pad_inches=0)
+        plt.close()
+
+
+def pred_no_finger(img_path):
+    result = CLIENT.infer(img_path, model_id="segfinger/2")
+    image = np.array(Image.open(img_path))
+    plt.imshow(image)
+    for pred in result['predictions']:
+        points = [(point['x'], point['y']) for point in pred['points']]
+        polygon = Polygon(points, edgecolor='black', linewidth=2, fill=True, facecolor='black')
+        plt.gca().add_patch(polygon)
+    plt.axis('off')
+    plt.savefig("predictions/no_finger_img.png", bbox_inches='tight', pad_inches=0)
+
 
 class Foot:
     y_top_params = 50
@@ -93,12 +167,14 @@ class Foot:
                     break
             x_all_coords.append(x_coords)
         if self.type == "left":
-            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2) + ((10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100)) # 60%40
+            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2) + (
+                    (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 60%40
             # self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2)) # 50%50
             self.x_middle = int(((x_all_coords[1][0] + x_all_coords[1][1]) / 2))
             self.x_bottom = int(((x_all_coords[2][0] + x_all_coords[2][1]) / 2))
         else:
-            self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 - ((10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 40%60
+            self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 - (
+                    (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 40%60
             # self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 )  # 50%50
             self.x_middle = int((x_all_coords[1][2] + x_all_coords[1][3]) / 2)
             if len(x_all_coords[2]) > 2:
@@ -164,10 +240,10 @@ class Foot:
                      '-co')
             plt.gca().invert_yaxis()
             plt.imshow(Foot.image)
-            left_angl = left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle,
-                                                        left_foot.y_middle, left_foot.x_bottom, left_foot.y_bottom)
-            right_angl = right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle,
-                                                          right_foot.y_middle, right_foot.x_bottom, right_foot.y_bottom)
+            left_angl = left.angle_between_vectors(left.x_top, left.y_top, left.x_middle,
+                                                   left.y_middle, left.x_bottom, left.y_bottom)
+            right_angl = right.angle_between_vectors(right.x_top, right.y_top, right.x_middle,
+                                                     right.y_middle, right.x_bottom, right.y_bottom)
             # plt.text(left.x_middle, left.y_middle, f'{int(left_angl)}', fontsize=15, color='blue', ha='right')
             # plt.text(right.x_middle, right.y_middle, f'{int(right_angl)}', fontsize=15, color='blue', ha='left')
             # plt.xticks([])
@@ -175,7 +251,8 @@ class Foot:
             plt.xlabel("Ось X")
             plt.ylabel("Ось Y")
             plt.show()
-            plt.savefig("plot.png")
+            plt.savefig("predictions/keypoint-cv.png")
+
 
 def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
     """
@@ -195,9 +272,15 @@ def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
     return countours, gray, image
 
 
-if __name__ == '__main__':
-    img_path: str = '000128.png'
-    Foot.countours, Foot.gray, Foot.image = image_to_countors(img_path)
+if __name__ == "__main__":
+    # if len(sys.argv) != 2:
+    #     print("Используйте: python App.py Путь-до-изображения")
+    #     sys.exit(1)
+    # img_path = sys.argv[1]
+    img_path = 'footK.jpg'
+    pred_unet(img_path)
+    pred_no_finger("predictions/segment_image.jpg")
+    Foot.countours, Foot.gray, Foot.image = image_to_countors("predictions/no_finger_img.png")
     left_foot = Foot("left")
     right_foot = Foot("right")
     left_foot.link = right_foot
