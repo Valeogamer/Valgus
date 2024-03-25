@@ -12,7 +12,6 @@ CLIENT = InferenceHTTPClient(
     api_key="lgPDkrQGntDDfpcouQNN"
 )
 
-
 def pred_no_finger(img_path):
     img = 'masked_image_1.jpg'
     result = CLIENT.infer(img, model_id="segfinger/2")
