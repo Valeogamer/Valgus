@@ -26,14 +26,14 @@ for r in results:
     keypoints_tensor = r.keypoints.xy
     keypoints_list = keypoints_tensor.tolist()
 
-    # Получаем координаты ключевых точек для правой ноги
+    # Получаем координаты ключевых точек для левой ноги
     left_xy = keypoints_list[0][:3]
     l_x, l_y = [], []
     for xy in left_xy:
         l_x.append(xy[0])
         l_y.append(xy[1])
 
-    # Получаем координаты ключевых точек для левой ноги
+    # Получаем координаты ключевых точек для правой ноги
     right_xy = keypoints_list[1][:3]
     r_x, r_y = [], []
     for xy in right_xy:
