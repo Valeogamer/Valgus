@@ -1,9 +1,11 @@
 import cv2
 import math
 import numpy as np
+from ultralytics import YOLO
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
+model = YOLO('best534.pt')
 
 class Foot:
     y_top_params = 50
@@ -98,18 +100,18 @@ class Foot:
                     break
             x_all_coords.append(x_coords)
         if self.type == "left":
-            # self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2) + (
-                    # (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 60%40
-            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2)) # 50%50
+            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2) + (
+                    (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 60%40
+            # self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2)) # 50%50
             # self.x_middle = int(((x_all_coords[1][0] + x_all_coords[1][1]) / 2))
-            self.x_middle = self.x_mid_dot()
+            # self.x_middle = self.x_mid_dot()
             self.x_bottom = int(((x_all_coords[2][0] + x_all_coords[2][1]) / 2))
         else:
-            # self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 - (
-                    # (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 60%40
-            self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 )  # 50%50
+            self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 - (
+                    (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 60%40
+            # self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2)  # 50%50
             # self.x_middle = int((x_all_coords[1][2] + x_all_coords[1][3]) / 2)
-            self.x_middle = self.x_mid_dot()
+            # self.x_middle = self.x_mid_dot()
             if len(x_all_coords[2]) > 2:
                 self.x_bottom = int(((x_all_coords[2][2] + x_all_coords[2][3]) / 2))
             else:
@@ -184,7 +186,7 @@ class Foot:
             plt.xlabel("Ось X")
             plt.ylabel("Ось Y")
             plt.show()
-            plt.savefig("plot.png")
+            # plt.savefig("plot.png")
 
     @staticmethod
     def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
@@ -218,16 +220,23 @@ class Foot:
         quadratic = 'quadratic'
         polynomial = 'polynomial'
         cubic = 'cubic'
-        kind_choice = quadratic
+        kind_choice = linear
+        # Получение высоты изображения
+        height = Foot.image.shape[0]
+        half_height = height / 2
         # Итерирование по каждому контуру
         for contour in Foot.contours:
             # Извлечение координат x и y из контура
             x = contour[:, 0, 0]
             y = contour[:, 0, 1]
 
+            filtered_indices = np.where(y >= half_height)
+            x = x[filtered_indices]
+            y = y[filtered_indices]
+
             # Интерполяция данных
             # Делим весь контур на равнные части в интервале от 0 до 1
-            t = np.linspace(0, 1, len(x))
+            t = np.linspace(0, 1, len(y))
             # Собираем функцию аппроксимации
             fx, fy = interp1d(t, x, kind=kind_choice), interp1d(t, y, kind=kind_choice)
 
@@ -257,7 +266,7 @@ class Foot:
         # plt.show()
 
     @staticmethod
-    def find_x_bounds_for_y(contour_x, contour_y, target_y, tolerance=80):
+    def find_x_bounds_for_y(contour_x, contour_y, target_y, tolerance=50):
         x_bounds = []
         for i in range(len(contour_y)):
             if abs(contour_y[i] - target_y) <= tolerance:
@@ -271,10 +280,53 @@ class Foot:
         print(left_x_bound, right_x_bound)
         return int((left_x_bound + right_x_bound) / 2)
 
+def yolo_key_point(img_path, l_f, r_f):
+    flag = True
+    conf_i = 0.10
+    while flag:
+        results = model.predict(img_path, conf=conf_i)
+        check_l = []
+        for r in results:
+            check_l.append(r.keypoints.xy.tolist())
+        if len(check_l[0]) == 2:
+            # ToDo чтобы не было такого чтобы bb наложены друг на друга
+            flag = False  # Ну или можно break
+        else:
+            conf_i += 0.01
+        if conf_i > 0.60:
+            raise NotImplemented
+
+    for r in results:
+        keypoints_tensor = r.keypoints.xy
+        keypoints_list = keypoints_tensor.tolist()
+
+        # Получаем координаты ключевых точек для левой ноги
+        left_xy = keypoints_list[0][:3]
+        l_x, l_y = [], []
+        for xy in left_xy:
+            l_x.append(xy[0])
+            l_y.append(xy[1])
+        # Получаем координаты ключевых точек для правой ноги
+        right_xy = keypoints_list[1][:3]
+        r_x, r_y = [], []
+        for xy in right_xy:
+            r_x.append(xy[0])
+            r_y.append(xy[1])
+        if l_x[1] < r_x[1]:
+            l_f.x_middle = l_x[1]
+            l_f.y_middle = l_y[1]
+            r_f.x_middle = r_x[1]
+            r_f.y_middle = r_y[1]
+        else:
+            r_f.x_middle = l_x[1]
+            r_f.y_middle = l_y[1]
+            l_f.x_middle = r_x[1]
+            l_f.y_middle = r_y[1]
+
 
 if __name__ == '__main__':
-    img_path: str = '/home/valeogamer/Загрузки/DataTest/00494.png'
-    dots = 10
+    img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00538.png'
+    dots = 5
     Foot.contours, Foot.gray, Foot.image = Foot.image_to_countors(img_path)
     left_foot = Foot("left")
     right_foot = Foot("right")
@@ -289,8 +341,11 @@ if __name__ == '__main__':
             left_foot.y_coords = contour[:, 0, 1]
         Foot.x_contours.extend(contour[:, 0, 0])
         Foot.y_contours.extend(contour[:, 0, 1])
-    Foot.aprox_contours(num_dots=dots)
+    # Foot.aprox_contours(num_dots=dots)
     Foot.run(left_foot, right_foot)
+    yolo_key_point(img_path, left_foot, right_foot)
+    Foot.visualization(left_foot, right_foot)
+    print(img_path)
     print(left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle, left_foot.y_middle,
                                           left_foot.x_bottom, left_foot.y_bottom))
     print(right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle, right_foot.y_middle,

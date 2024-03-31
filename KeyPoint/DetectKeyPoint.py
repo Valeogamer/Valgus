@@ -4,13 +4,14 @@
 from ultralytics import YOLO
 from PIL import Image
 import numpy as np
-model = YOLO('best.pt')
+
+model = YOLO('best534.pt')
 
 # ToDo Должна быть логика, что предсказано 2, и предсказано без наложения
 flag = True
 conf_i = 0.10
 while flag:
-    results = model.predict("C:/Users/Valentin/Desktop/538RGBMASKS/00538.png", conf=conf_i)
+    results = model.predict("C:/Users/Valentin/Desktop/DataTest/00538.png", conf=conf_i)
     check_l = []
     for r in results:
         check_l.append(r.keypoints.xy.tolist())
@@ -40,22 +41,24 @@ for r in results:
         r_x.append(xy[0])
         r_y.append(xy[1])
 
+
 # Вычисление угла между двумя векторами
 def compute_angle(x1, y1, x2, y2):
     dot_product = x1 * x2 + y1 * y2
-    magnitude1 = np.sqrt(x1**2 + y1**2)
-    magnitude2 = np.sqrt(x2**2 + y2**2)
+    magnitude1 = np.sqrt(x1 ** 2 + y1 ** 2)
+    magnitude2 = np.sqrt(x2 ** 2 + y2 ** 2)
     angle = np.arccos(dot_product / (magnitude1 * magnitude2))
     return np.degrees(angle)
 
-# Вычисление угла для правой ноги
-angle_right_hand = compute_angle(r_x[1] - r_x[0], r_y[1] - r_y[0], r_x[2] - r_x[1], r_y[2] - r_y[1])
 
 # Вычисление угла для левой ноги
 angle_left_hand = compute_angle(l_x[1] - l_x[0], l_y[1] - l_y[0], l_x[2] - l_x[1], l_y[2] - l_y[1])
 
-print("Угол между точками для правой ноги:", angle_right_hand)
+# Вычисление угла для правой ноги
+angle_right_hand = compute_angle(r_x[1] - r_x[0], r_y[1] - r_y[0], r_x[2] - r_x[1], r_y[2] - r_y[1])
+
 print("Угол между точками для левой ноги:", angle_left_hand)
+print("Угол между точками для правой ноги:", angle_right_hand)
 # Вывод изображения
 # print(results)
 r = results[0]
