@@ -11,7 +11,8 @@ model = YOLO('best534.pt')
 flag = True
 conf_i = 0.10
 while flag:
-    results = model.predict("C:/Users/Valentin/Desktop/DataTest/00538.png", conf=conf_i)
+    # results = model.predict("C:/Users/Valentin/Desktop/DataTest/00536.png", conf=conf_i)
+    results = model.predict("00536PR.png", conf=conf_i)
     check_l = []
     for r in results:
         check_l.append(r.keypoints.xy.tolist())

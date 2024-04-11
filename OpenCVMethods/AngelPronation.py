@@ -48,9 +48,11 @@ class Foot:
         """
         self.y_max = max(self.y_coords)
         self.y_min = min(self.y_coords)
+        if abs(self.y_max - self.y_min) < 15:
+            self.y_min = self.link.y_min
         self.y_delta = int(abs(self.y_max - self.y_min))
 
-    def parameters(self, top: int = 60, middle: int = 35, bottom: int = 2):
+    def parameters(self, top: int = 70, middle: int = 25, bottom: int = 1):
         """
         Параметры пропорции.
         """
@@ -100,16 +102,16 @@ class Foot:
                     break
             x_all_coords.append(x_coords)
         if self.type == "left":
-            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2) + (
-                    (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 60%40
-            # self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2)) # 50%50
+            # self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2) + (
+            #         (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 60%40
+            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2)) # 50%50
             # self.x_middle = int(((x_all_coords[1][0] + x_all_coords[1][1]) / 2))
             # self.x_middle = self.x_mid_dot()
             self.x_bottom = int(((x_all_coords[2][0] + x_all_coords[2][1]) / 2))
         else:
-            self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 - (
-                    (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 60%40
-            # self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2)  # 50%50
+            # self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2 - (
+            #         (10 * abs(x_all_coords[0][2] - x_all_coords[0][3])) / 100))  # 60%40
+            self.x_top = int((x_all_coords[0][2] + x_all_coords[0][3]) / 2)  # 50%50
             # self.x_middle = int((x_all_coords[1][2] + x_all_coords[1][3]) / 2)
             # self.x_middle = self.x_mid_dot()
             if len(x_all_coords[2]) > 2:
@@ -137,6 +139,35 @@ class Foot:
 
         return angle_deg
 
+    def approx_line(self):
+        """
+        Вверхняя точка
+        """
+        # переводим в структуру np.array
+        new_x = np.array(self.x_coords)
+        new_y = np.array(self.y_coords)
+        # извлечение всех координат конутра ниже отметки
+        indx = np.where(self.y_middle > new_y)
+        new_x = new_x[indx]
+        new_y = new_y[indx]
+        # извлечение всех координат конутра и выше отметки
+        indx = np.where(self.y_min < new_y)
+        new_x = new_x[indx]
+        new_y = new_y[indx]
+        # поиск левого и правого контура
+        indx = np.where(self.x_middle > new_x)
+        n_x_l = new_x[indx]
+        n_y_l = new_y[indx]
+        indx = np.where(self.x_middle < new_x)
+        n_x_r = new_x[indx]
+        n_y_r = new_y[indx]
+        plt.plot(n_x_l, n_y_l)
+        plt.plot(n_x_r, n_y_r)
+        plt.gca().invert_yaxis()
+        plt.show()
+        return (n_x_l, n_y_l), (n_x_r, n_y_r)
+
+
     @staticmethod
     def run(left_foot, right_foot):
         """
@@ -148,16 +179,17 @@ class Foot:
         right_foot.find_y()
         left_foot.find_x()
         right_foot.find_x()
-        Foot.visualization(left_foot, right_foot)
+        # Foot.visualization(left_foot, right_foot)
 
     @staticmethod
-    def visualization(left, right):
+    def visualization(left, right, img_path=None):
         """
         Визуализация
         """
         left: Foot
         right: Foot
-        if Foot.x_top:
+        # if Foot.x_top:
+        if False:
             # plt.plot(Foot.x_contours, Foot.y_contours)
             plt.plot(Foot.x_top, Foot.y_top, 'r*')
             plt.plot(Foot.x_middle, Foot.y_middle, 'g*')
@@ -179,14 +211,17 @@ class Foot:
                                                         left_foot.y_middle, left_foot.x_bottom, left_foot.y_bottom)
             right_angl = right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle,
                                                           right_foot.y_middle, right_foot.x_bottom, right_foot.y_bottom)
-            # plt.text(left.x_middle, left.y_middle, f'{int(left_angl)}', fontsize=15, color='blue', ha='right')
-            # plt.text(right.x_middle, right.y_middle, f'{int(right_angl)}', fontsize=15, color='blue', ha='left')
+            plt.text(left.x_middle, left.y_middle, f'{left_angl:.04}', fontsize=15, color='blue', ha='right')
+            plt.text(right.x_middle, right.y_middle, f'{right_angl:.04}', fontsize=15, color='blue', ha='left')
             # plt.xticks([])
             # plt.yticks([])
             plt.xlabel("Ось X")
             plt.ylabel("Ось Y")
             plt.show()
             # plt.savefig("plot.png")
+            # if img_path:
+            #     plt.savefig("plot.png")
+                # plt.savefig(f'{img_path[-9:-4]}.png', dpi=100)
 
     @staticmethod
     def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
@@ -223,7 +258,7 @@ class Foot:
         kind_choice = linear
         # Получение высоты изображения
         height = Foot.image.shape[0]
-        half_height = height / 2
+        half_height = int(height / 2)
         # Итерирование по каждому контуру
         for contour in Foot.contours:
             # Извлечение координат x и y из контура
@@ -260,10 +295,10 @@ class Foot:
             cv2.polylines(Foot.image, [approximated_contour], isClosed=True, color=(255, 0, 0), thickness=2)
 
         # Отображение результата
-        # plt.imshow(cv2.cvtColor(Foot.image, cv2.COLOR_BGR2RGB))
-        # plt.title('Contour Approximation')
-        # plt.gca().invert_yaxis()
-        # plt.show()
+        plt.imshow(cv2.cvtColor(Foot.image, cv2.COLOR_BGR2RGB))
+        plt.title('Contour Approximation')
+        plt.gca().invert_yaxis()
+        plt.show()
 
     @staticmethod
     def find_x_bounds_for_y(contour_x, contour_y, target_y, tolerance=50):
@@ -325,7 +360,7 @@ def yolo_key_point(img_path, l_f, r_f):
 
 
 if __name__ == '__main__':
-    img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00538.png'
+    img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00488.png'
     dots = 5
     Foot.contours, Foot.gray, Foot.image = Foot.image_to_countors(img_path)
     left_foot = Foot("left")
@@ -344,9 +379,11 @@ if __name__ == '__main__':
     # Foot.aprox_contours(num_dots=dots)
     Foot.run(left_foot, right_foot)
     yolo_key_point(img_path, left_foot, right_foot)
-    Foot.visualization(left_foot, right_foot)
+    Foot.visualization(left_foot, right_foot, img_path=img_path)
     print(img_path)
     print(left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle, left_foot.y_middle,
                                           left_foot.x_bottom, left_foot.y_bottom))
     print(right_foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle, right_foot.y_middle,
                                            right_foot.x_bottom, right_foot.y_bottom))
+    # Foot.aprox_contours(10)
+    a = 0  # breakpoint
