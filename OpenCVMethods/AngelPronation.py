@@ -7,6 +7,7 @@ from scipy.interpolate import interp1d
 
 model = YOLO('best534.pt')
 
+
 class Foot:
     y_top_params = 50
     y_middle_params = 35
@@ -38,6 +39,15 @@ class Foot:
         # из новых идей
         self.apprx_x_coords: list[int] = []
         self.apprx_y_coords: list[int] = []
+        # еще контуры
+        self.x_up_l = 0.
+        self.y_up_l = 0.
+        self.x_down_l = 0.
+        self.y_down_l = 0.
+        self.x_up_r = 0.
+        self.y_up_r = 0.
+        self.x_down_r = 0.
+        self.y_down_r = 0.
 
     def __repr__(self):
         return f"Foot {self.type}: {id(self)}"
@@ -104,7 +114,7 @@ class Foot:
         if self.type == "left":
             # self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2) + (
             #         (10 * abs(x_all_coords[0][0] - x_all_coords[0][1])) / 100))  # 60%40
-            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2)) # 50%50
+            self.x_top = int(((x_all_coords[0][0] + x_all_coords[0][1]) / 2))  # 50%50
             # self.x_middle = int(((x_all_coords[1][0] + x_all_coords[1][1]) / 2))
             # self.x_middle = self.x_mid_dot()
             self.x_bottom = int(((x_all_coords[2][0] + x_all_coords[2][1]) / 2))
@@ -161,12 +171,51 @@ class Foot:
         indx = np.where(self.x_middle < new_x)
         n_x_r = new_x[indx]
         n_y_r = new_y[indx]
+
+        # Функции апроксимации y(x)
+        degree = 1  # линейная функция апроксимации
+        new_Y = np.array([self.y_middle, self.y_min])  # для каких y нужно определить x
+        # левая
+        coef_l = np.polyfit(n_y_l, n_x_l, degree)
+        l_func_yx = np.poly1d(coef_l)
+        pred_x_l = l_func_yx(new_Y)
+        # правая
+        coef_r = np.polyfit(n_y_r, n_x_r, degree)
+        r_func_yx = np.poly1d(coef_r)
+        pred_x_r = r_func_yx(new_Y)
+        ang_l = self.angle_between_vectors(pred_x_l[1], self.y_min, pred_x_l[0], self.y_middle,
+                                           self.x_middle - self.x_middle / 2, self.y_middle)
+        ang_r = self.angle_between_vectors(pred_x_r[1], self.y_min, pred_x_r[0], self.y_middle, self.x_middle,
+                                           self.y_middle)
+        ang_t = self.angle_between_vectors(abs((pred_x_r[1] + pred_x_l[1]) / 2), self.y_min, self.x_middle,
+                                           self.y_middle, pred_x_l[0], self.y_middle)
+        self.x_top = abs((pred_x_r[1] + pred_x_l[1]) / 2)
+        self.y_top = self.y_min
+        self.x_up_l = pred_x_l[1]
+        self.y_up_l = self.y_min
+        self.x_down_l = pred_x_l[0]
+        self.y_down_l = self.y_middle
+        self.x_up_r = pred_x_r[1]
+        self.y_up_r = self.y_min
+        self.x_down_r = pred_x_r[0]
+        self.y_down_r = self.y_middle
         plt.plot(n_x_l, n_y_l)
         plt.plot(n_x_r, n_y_r)
+        plt.plot(pred_x_l, new_Y, '-r^')
+        plt.plot(pred_x_r, new_Y, '-g^')
+        plt.plot([pred_x_l[1], pred_x_l[0], self.x_middle - self.x_middle / 2],
+                 [self.y_min, self.y_middle, self.y_middle], '-y*')
+        plt.plot([pred_x_r[1], pred_x_r[0], self.x_middle], [self.y_min, self.y_middle, self.y_middle], '-b*')
+        plt.plot([abs((pred_x_r[1] + pred_x_l[1]) / 2), self.x_middle, pred_x_l[0]],
+                 [self.y_min, self.y_middle, self.y_middle], '-r^')
         plt.gca().invert_yaxis()
+        plt.legend()
         plt.show()
+        print(ang_l)
+        print(ang_r)
+        print(ang_t)
+        # между контурами pred_x_l, new_Y и pred_x_r, new_Y построить линию
         return (n_x_l, n_y_l), (n_x_r, n_y_r)
-
 
     @staticmethod
     def run(left_foot, right_foot):
@@ -205,6 +254,21 @@ class Foot:
             plt.plot(right.x_bottom, right.y_bottom, 'r*')
             plt.plot([right.x_top, right.x_middle, right.x_bottom], [right.y_top, right.y_middle, right.y_bottom],
                      '-co')
+            # s
+            lw = 3
+            plt.plot([left_foot.x_up_l, left_foot.x_down_l, left_foot.x_middle - left_foot.x_middle / 2],
+                     [left_foot.y_up_l, left_foot.y_down_l, left_foot.y_middle], '-c*', linewidth=lw)
+            plt.plot([left_foot.x_up_r, left_foot.x_down_r, left_foot.x_middle],
+                     [left_foot.y_up_r, left_foot.y_down_r, left_foot.y_middle], '-b*', linewidth=lw)
+            plt.plot([abs((left_foot.x_up_l + left_foot.x_up_r) / 2), left_foot.x_middle, left_foot.x_down_l],
+                     [left_foot.y_min, left_foot.y_middle, left_foot.y_middle], '-r^', linewidth=lw)
+            plt.plot([right_foot.x_up_l, right_foot.x_down_l, right_foot.x_middle - right_foot.x_middle / 4],
+                     [right_foot.y_up_l, right_foot.y_down_l, right_foot.y_middle], '-c*', linewidth=lw)
+            plt.plot([right_foot.x_up_r, right_foot.x_down_r, right_foot.x_middle],
+                     [right_foot.y_up_r, right_foot.y_down_r, right_foot.y_middle], '-b*', linewidth=lw)
+            plt.plot([abs((right_foot.x_up_l + right_foot.x_up_r) / 2), right_foot.x_middle, right_foot.x_down_l],
+                     [right_foot.y_min, right_foot.y_middle, right_foot.y_middle], '-r^', linewidth=lw)
+            # end
             plt.gca().invert_yaxis()
             plt.imshow(Foot.image)
             left_angl = left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle,
@@ -221,7 +285,7 @@ class Foot:
             # plt.savefig("plot.png")
             # if img_path:
             #     plt.savefig("plot.png")
-                # plt.savefig(f'{img_path[-9:-4]}.png', dpi=100)
+            # plt.savefig(f'{img_path[-9:-4]}.png', dpi=100)
 
     @staticmethod
     def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
@@ -315,6 +379,7 @@ class Foot:
         print(left_x_bound, right_x_bound)
         return int((left_x_bound + right_x_bound) / 2)
 
+
 def yolo_key_point(img_path, l_f, r_f):
     flag = True
     conf_i = 0.10
@@ -360,7 +425,7 @@ def yolo_key_point(img_path, l_f, r_f):
 
 
 if __name__ == '__main__':
-    img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00488.png'
+    img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00494.png'
     dots = 5
     Foot.contours, Foot.gray, Foot.image = Foot.image_to_countors(img_path)
     left_foot = Foot("left")
@@ -379,6 +444,8 @@ if __name__ == '__main__':
     # Foot.aprox_contours(num_dots=dots)
     Foot.run(left_foot, right_foot)
     yolo_key_point(img_path, left_foot, right_foot)
+    left_foot.approx_line()
+    right_foot.approx_line()
     Foot.visualization(left_foot, right_foot, img_path=img_path)
     print(img_path)
     print(left_foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle, left_foot.y_middle,
@@ -387,3 +454,4 @@ if __name__ == '__main__':
                                            right_foot.x_bottom, right_foot.y_bottom))
     # Foot.aprox_contours(10)
     a = 0  # breakpoint
+    # right_foot.approx_line()
