@@ -1,15 +1,15 @@
 import cv2
 import math
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 from ultralytics import YOLO
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
-from sklearn.preprocessing import Binarizer
-from tensorflow.keras.models import load_model
+# from sklearn.preprocessing import Binarizer
+# from tensorflow.keras.models import load_model
 
 model_yolo = YOLO('best534.pt')
-model_unet = load_model('unet_model_other_foot.h5')
+# model_unet = load_model('unet_model_other_foot.h5')
 IMAGE_SIZE = (640, 640)
 PLOTS_DPI = 150
 
@@ -44,7 +44,7 @@ class Foot:
         self.x_bottom: int = 0  # X нижней части
         # из новых идей
         self.apprx_x_coords: list[int] = []
-        self.apprx_y_coords: list[int] = []
+        self.apprx_y_cords: list[int] = []
         # еще контуры
         self.x_up_l = 0.
         self.y_up_l = 0.
@@ -234,20 +234,20 @@ class Foot:
         plt.plot(right.x_bottom, right.y_bottom, 'r*')
         plt.plot([right.x_top, right.x_middle, right.x_bottom], [right.y_top, right.y_middle, right.y_bottom],
                  '-co')
-        # if apprx_l:
-        #     lw = 3
-        #     plt.plot([left_foot.x_up_l, left_foot.x_down_l, left_foot.x_middle - left_foot.x_middle / 2],
-        #              [left_foot.y_up_l, left_foot.y_down_l, left_foot.y_middle], '-c*', linewidth=lw)
-        #     plt.plot([left_foot.x_up_r, left_foot.x_down_r, left_foot.x_middle],
-        #              [left_foot.y_up_r, left_foot.y_down_r, left_foot.y_middle], '-b*', linewidth=lw)
-        #     plt.plot([abs((left_foot.x_up_l + left_foot.x_up_r) / 2), left_foot.x_middle, left_foot.x_down_l],
-        #              [left_foot.y_min, left_foot.y_middle, left_foot.y_middle], '-r^', linewidth=lw)
-        #     plt.plot([right_foot.x_up_l, right_foot.x_down_l, right_foot.x_middle - right_foot.x_middle / 4],
-        #              [right_foot.y_up_l, right_foot.y_down_l, right_foot.y_middle], '-c*', linewidth=lw)
-        #     plt.plot([right_foot.x_up_r, right_foot.x_down_r, right_foot.x_middle],
-        #              [right_foot.y_up_r, right_foot.y_down_r, right_foot.y_middle], '-b*', linewidth=lw)
-        #     plt.plot([abs((right_foot.x_up_l + right_foot.x_up_r) / 2), right_foot.x_middle, right_foot.x_down_l],
-        #              [right_foot.y_min, right_foot.y_middle, right_foot.y_middle], '-r^', linewidth=lw)
+        if apprx_l:
+            lw = 3
+            plt.plot([left_foot.x_up_l, left_foot.x_down_l, left_foot.x_middle - left_foot.x_middle / 2],
+                     [left_foot.y_up_l, left_foot.y_down_l, left_foot.y_middle], '-c*', linewidth=lw)
+            plt.plot([left_foot.x_up_r, left_foot.x_down_r, left_foot.x_middle],
+                     [left_foot.y_up_r, left_foot.y_down_r, left_foot.y_middle], '-b*', linewidth=lw)
+            plt.plot([abs((left_foot.x_up_l + left_foot.x_up_r) / 2), left_foot.x_middle, left_foot.x_down_l],
+                     [left_foot.y_min, left_foot.y_middle, left_foot.y_middle], '-r^', linewidth=lw)
+            plt.plot([right_foot.x_up_l, right_foot.x_down_l, right_foot.x_middle - right_foot.x_middle / 4],
+                     [right_foot.y_up_l, right_foot.y_down_l, right_foot.y_middle], '-c*', linewidth=lw)
+            plt.plot([right_foot.x_up_r, right_foot.x_down_r, right_foot.x_middle],
+                     [right_foot.y_up_r, right_foot.y_down_r, right_foot.y_middle], '-b*', linewidth=lw)
+            plt.plot([abs((right_foot.x_up_l + right_foot.x_up_r) / 2), right_foot.x_middle, right_foot.x_down_l],
+                     [right_foot.y_min, right_foot.y_middle, right_foot.y_middle], '-r^', linewidth=lw)
         plt.gca().invert_yaxis()
         plt.imshow(Foot.image)
         left_angl = Foot.angle_between_vectors(left_foot.x_top, left_foot.y_top, left_foot.x_middle,
@@ -442,24 +442,26 @@ def pred_unet(img_path):
 
 if __name__ == '__main__':
     import os
+    # unet test
     # path = "/home/valeogamer/Загрузки/Unet_BG/"
     # path_imgs = os.listdir(path)
     # for img in path_imgs:
     #     pred_unet(path + img)
-    path = 'unet_pred/'
-    path_imgs = os.listdir(path)
+    # path = 'unet_pred/'
+    # path_imgs = os.listdir(path)
     # for p_img in path_imgs:
-    p_img = '00538.png'
-    img_path: str = path + p_img
-    # img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00496.png'
+    # p_img = '00538.png'
+    # img_path: str = path + p_img
+    # unet test end
+    img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00496.png'
     # для обрезания пальцев с помощью апркосимации (средняя точка)
     contour_mid = False
     dots = 5
     mid_x = False
 
     # для определения вверхней точки апроксимацией (вверхняя точка)
-    apprx_line_top = False
-    apprx_viz = False
+    apprx_line_top = True
+    apprx_viz = True
     apply_yolo = True
 
     # % соотношение вверхней точки
