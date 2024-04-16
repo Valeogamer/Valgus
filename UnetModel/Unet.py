@@ -9,7 +9,7 @@ import tensorflow as tf
 import numpy as np
 
 
-model = load_model('UnetModel/unet_model_other_foot.h5')
+model = load_model('unet_model_other_foot.h5')
 IMAGE_SIZE = (640, 640)
 PLOTS_DPI = 150
 
@@ -54,7 +54,9 @@ def pred_unet(img_path):
         plt.savefig(f'predictions/segment_image.jpg', bbox_inches='tight', pad_inches=0)
         plt.close()
 
-
+if __name__ == '__main__':
+    path = 'footK.jpg'
+    pred_unet(path)
 
 
 # fig, axes = plt.subplots(1, 4, figsize=(15, 18))
