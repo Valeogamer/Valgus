@@ -12,36 +12,36 @@ class FileManager:
     Менеджер файлов
     """
 
-    def __init__(self, path_dir, path_dir_p, path_dir_o, new_n_p, new_n_o, extention, new_path_dir, new_path_dir_o,
-                 new_path_dir_p):
+    def __init__(self, path_dir, path_dir_orig, path_dir_mask, new_n_orig, new_n_mask, extention, new_path_dir, new_path_dir_mask,
+                 new_path_dir_orig):
         # ToDo некоторые атрибуты должны быть protected
         self.path_dir: tp.Optional[str] = path_dir  # Constants.PATH_DIR
-        self.path_dir_pronation: tp.Optional[str] = path_dir_p  # Constants.PATH_DIR_P
-        self.path_dir_overpronation: tp.Optional[str] = path_dir_o  # Constants.PATH_DIR_O
-        self.new_name_pronation: tp.Optional[str] = new_n_p  # Constants.NAME_P
-        self.new_name_overpronation: tp.Optional[str] = new_n_o  # Constants.NAME_O
+        self.path_dir_orig: tp.Optional[str] = path_dir_orig  # Constants.PATH_DIR_Orig
+        self.path_dir_mask: tp.Optional[str] = path_dir_mask  # Constants.PATH_DIR_Mask
+        self.new_name_orig: tp.Optional[str] = new_n_orig  # Constants.NAME_Orig
+        self.new_name_mask: tp.Optional[str] = new_n_mask  # Constants.NAME_Mask
         self.extention: tp.Optional[str] = extention  # Constants.EXTENTION_PNG
         self.new_path_dir: tp.Optional[str] = new_path_dir
-        self.new_path_dir_o: tp.Optional[str] = new_path_dir_o
-        self.new_path_dir_p: tp.Optional[str] = new_path_dir_p
-        self.path_dir_list_pronation: tp.Optional[list[str]] = None
-        self.path_dir_list_overpronation: tp.Optional[list[str]] = None
-        self.len_data_pronation: tp.Optional[int] = None
-        self.len_data_overpronation: tp.Optional[int] = None
-        self.result_path_dir_pronation: tp.Optional[int] = None
-        self.result_path_dir_overpronation: tp.Optional[int] = None
+        self.new_path_dir_mask: tp.Optional[str] = new_path_dir_mask
+        self.new_path_dir_orig: tp.Optional[str] = new_path_dir_orig
+        self.path_dir_list_orig: tp.Optional[list[str]] = None
+        self.path_dir_list_mask: tp.Optional[list[str]] = None
+        self.len_data_orig: tp.Optional[int] = None
+        self.len_data_mask: tp.Optional[int] = None
+        self.result_path_dir_orig: tp.Optional[int] = None
+        self.result_path_dir_mask: tp.Optional[int] = None
         self.len_name: int = 0
         if not os.path.exists(new_path_dir):
             os.makedirs(new_path_dir)
-            if not os.path.exists(new_path_dir_o):
-                os.makedirs(new_path_dir_o)
-            if not os.path.exists(new_path_dir_p):
-                os.makedirs(new_path_dir_p)
-        if self.path_dir_pronation and self.path_dir_overpronation:
+            if not os.path.exists(new_path_dir_mask):
+                os.makedirs(new_path_dir_mask)
+            if not os.path.exists(new_path_dir_orig):
+                os.makedirs(new_path_dir_orig)
+        if self.path_dir_orig and self.path_dir_mask:
             self.create_path_dir_list()
-        if self.path_dir_list_pronation != None:
-            self.len_data_pronation = len(self.path_dir_list_pronation)
-            self.len_data_overpronation = len(self.path_dir_list_overpronation)
+        if self.path_dir_list_orig != None:
+            self.len_data_orig = len(self.path_dir_list_orig)
+            self.len_data_mask = len(self.path_dir_list_mask)
             # ToDo добавить проверку на дисбаланс данных (сейчас делается в ручную)
 
     def __repr__(self):
@@ -72,19 +72,19 @@ class FileManager:
         Список из путей до файлов
         Заполняет атрибуты экземпляра.
         Атрибут содержит путь (ссылку до каждого файла)
-        :return: Заполнят атрибуты: path_dir_list_pronation; path_dir_list_overpronation;
+        :return: Заполнят атрибуты: path_dir_list_orig; path_dir_list_mask;
         """
-        self.path_dir_list_pronation = [self.path_dir_pronation + '//' + i for i in os.listdir(self.path_dir_pronation)]
-        self.path_dir_list_overpronation = [self.path_dir_overpronation + '//' + i for i in
-                                            os.listdir(self.path_dir_overpronation)]
+        self.path_dir_list_orig = [self.path_dir_orig + '//' + i for i in os.listdir(self.path_dir_orig)]
+        self.path_dir_list_mask = [self.path_dir_mask + '//' + i for i in
+                                            os.listdir(self.path_dir_mask)]
 
     def update_result_data(self):
         """
         Количество полученных данных после обработки.
         :return:
         """
-        self.result_path_dir_pronation = [self.new_path_dir_p + '//' + i for i in os.listdir(self.new_path_dir_p)]
-        self.result_path_dir_overpronation = [self.new_path_dir_o + '//' + i for i in os.listdir(self.new_path_dir_o)]
+        self.result_path_dir_orig = [self.new_path_dir_orig + '//' + i for i in os.listdir(self.new_path_dir_orig)]
+        self.result_path_dir_mask = [self.new_path_dir_mask + '//' + i for i in os.listdir(self.new_path_dir_mask)]
 
 
 class CreateDatasetImages:
@@ -445,7 +445,7 @@ class ImageAugmentorPillow:
         :param angle: Угол вращения
         :return: изображение, перевернутое на заданный угол
         """
-        return image.rotate(angle)
+        return image.rotate(angle, expand=True)
 
     def flip(self, image, flip_type: int):
         """
@@ -494,11 +494,12 @@ class ImageAugmentorPillow:
         (factor < 1) - яркость ниже
         :return: измененное по яркости изображение
         """
-        enhancer = ImageEnhance.Brightness(image)
+        enhancer = ImageEnhance.Sharpness(image)
         return enhancer.enhance(factor)
 
     def adjust_contrast(self, image, factor: float):
         """
+        1.2 и 0.4
         Изменение контраста изображения
         :param image: Изображение
         :param factor: регулировка контраста
@@ -579,53 +580,65 @@ class ImageAugmentorPillow:
 
     def run_augmentor(self, file_manager: FileManager):
         """
-        Запуск основных методов аугментации данных, по отдельности как для O, так и для P.
+        Запуск основных методов аугментации данных, по отдельности как для mask, так и для orig.
         :param file_manager: менеджер файлов
         :return:
         """
         # ToDo Да понимаю, требует рефакторинга
-        # аугментация pronation
-        if len(file_manager.path_dir_list_pronation) > 0:
-            file_manager.len_name = 0
-            for image_path in file_manager.path_dir_list_pronation:
+        # аугментация orig
+        if len(file_manager.path_dir_list_orig) > 0:
+            file_manager.len_name = 1
+            for image_path in file_manager.path_dir_list_orig:
                 list_aug_imgs = []
                 img = self.open_image(image_path)
-                img = img.resize((256, 256))
-                list_aug_imgs.extend([img, self.blur(img), self.flip(img, 1), self.add_noise(img)])
+                # img = img.resize((640, 640))
+                list_aug_imgs.extend(
+                    [img, self.blur(img), self.flip(img, 1), self.add_noise(img), self.adjust_brightness(img, 5.0),
+                     self.adjust_brightness(img, -5.0), self.adjust_contrast(img, 0.4),
+                     self.adjust_contrast(img, 1.2)])
                 for image in list_aug_imgs:
-                    self.save_image(image, save_path=file_manager.new_path_dir_p,
-                                    name=file_manager.new_name_pronation + '.' + str(
+                    image = image.resize((640, 640))
+                    self.save_image(image, save_path=file_manager.new_path_dir_orig,
+                                    name=file_manager.new_name_orig + str(
                                         file_manager.len_name) + file_manager.extention)
                     file_manager.len_name += 1
                 for l_img in list_aug_imgs:
                     rotate_list = []
                     rotate_list.extend(
-                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180)])
+                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180),
+                         self.rotate(l_img, 45), self.rotate(l_img, -45), self.rotate(l_img, 135),
+                         self.rotate(l_img, 225)])
                     for r_img in rotate_list:
-                        self.save_image(r_img, save_path=file_manager.new_path_dir_p,
-                                        name=file_manager.new_name_pronation + '.' + str(
+                        r_img = r_img.resize((640, 640))
+                        self.save_image(r_img, save_path=file_manager.new_path_dir_orig,
+                                        name=file_manager.new_name_orig + str(
                                             file_manager.len_name) + file_manager.extention)
                         file_manager.len_name += 1
 
-        # аугментация overpronation
-        if len(file_manager.path_dir_list_overpronation) > 0:
-            file_manager.len_name = 0
-            for image_path in file_manager.path_dir_list_overpronation:
+        # аугментация mask
+        if len(file_manager.path_dir_list_mask) > 0:
+            file_manager.len_name = 1
+            for image_path in file_manager.path_dir_list_mask:
                 list_aug_imgs = []
                 img = self.open_image(image_path)
-                img = img.resize((256, 256))
-                list_aug_imgs.extend([img, self.blur(img), self.flip(img, 1), self.add_noise(img)])
+                # img = img.resize((640, 640))
+                list_aug_imgs.extend(
+                    [img, img, self.flip(img, 1), img, img, img, img, img])
                 for image in list_aug_imgs:
-                    self.save_image(image, save_path=file_manager.new_path_dir_o,
-                                    name=file_manager.new_name_overpronation + '.' + str(
+                    image = image.resize((640, 640))
+                    self.save_image(image, save_path=file_manager.new_path_dir_mask,
+                                    name=file_manager.new_name_mask + str(
                                         file_manager.len_name) + file_manager.extention)
                     file_manager.len_name += 1
                 for l_img in list_aug_imgs:
                     rotate_list = []
                     rotate_list.extend(
-                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180)])
+                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180),
+                         self.rotate(l_img, 45), self.rotate(l_img, -45), self.rotate(l_img, 135),
+                         self.rotate(l_img, 225)])
                     for r_img in rotate_list:
-                        self.save_image(r_img, save_path=file_manager.new_path_dir_o,
-                                        name=file_manager.new_name_overpronation + '.' + str(
+                        r_img = r_img.resize((640, 640))
+                        self.save_image(r_img, save_path=file_manager.new_path_dir_mask,
+                                        name=file_manager.new_name_mask + str(
                                             file_manager.len_name) + file_manager.extention)
                         file_manager.len_name += 1
