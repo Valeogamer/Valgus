@@ -1,0 +1,31 @@
+/* HEADER */
+
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: white;
+    padding: 10px;
+}
+
+.header__img {
+    height: 64px;
+    width: 64px;
+}
+
+/* FOOTER */
+
+footer {
+    position: fixed;
+    bottom: 0;
+    background-color: #f8f9fa; /* задайте цвет фона, который вам нравится */
+    padding: 20px;
+    text-align: center;
+    z-index: 1000;
+    width: 100%;
+}
+
+.footer__img {
+    height: 30px;
+    width: 30px;
+}
