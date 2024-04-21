@@ -5,6 +5,7 @@ import numpy as np
 from ultralytics import YOLO
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+
 # from sklearn.preprocessing import Binarizer
 # from tensorflow.keras.models import load_model
 
@@ -233,7 +234,7 @@ class Foot:
         plt.plot(right.x_middle, right.y_middle, 'g*')
         plt.plot(right.x_bottom, right.y_bottom, 'r*')
         plt.plot([right.x_top, right.x_middle, right.x_bottom], [right.y_top, right.y_middle, right.y_bottom],
-                 '-co')
+                 '-ro')
         if apprx_l:
             lw = 3
             plt.plot([left_foot.x_up_l, left_foot.x_down_l, left_foot.x_middle - left_foot.x_middle / 2],
@@ -254,8 +255,8 @@ class Foot:
                                                left_foot.y_middle, left_foot.x_bottom, left_foot.y_bottom)
         right_angl = Foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle,
                                                 right_foot.y_middle, right_foot.x_bottom, right_foot.y_bottom)
-        plt.text(left.x_middle, left.y_middle, f'{left_angl:.04}', fontsize=15, color='blue', ha='right')
-        plt.text(right.x_middle, right.y_middle, f'{right_angl:.04}', fontsize=15, color='blue', ha='left')
+        # plt.text(left.x_middle, left.y_middle, f'{left_angl:.04}', fontsize=15, color='blue', ha='right')
+        # plt.text(right.x_middle, right.y_middle, f'{right_angl:.04}', fontsize=15, color='blue', ha='left')
         # plt.xticks([])
         # plt.yticks([])
         plt.xlabel("Ось X")
@@ -355,7 +356,7 @@ class Foot:
         return left_x_bound, right_x_bound
 
 
-def yolo_key_point(img_path, l_f, r_f):
+def yolo_key_point(img_path, l_f, r_f, full=False):
     flag = True
     conf_i = 0.10
     while flag:
@@ -388,11 +389,29 @@ def yolo_key_point(img_path, l_f, r_f):
             r_x.append(xy[0])
             r_y.append(xy[1])
         if l_x[1] < r_x[1]:
+            if full:
+                l_f.x_top = l_x[0]
+                l_f.y_top = l_y[0]
+                l_f.x_bottom = l_x[2]
+                l_f.y_bottom = l_y[2]
+                r_f.x_top = r_x[0]
+                r_f.y_top = r_y[0]
+                r_f.x_bottom = r_x[2]
+                r_f.y_bottom = r_y[2]
             l_f.x_middle = l_x[1]
             l_f.y_middle = l_y[1]
             r_f.x_middle = r_x[1]
             r_f.y_middle = r_y[1]
         else:
+            if full:
+                l_f.x_top = r_x[0]
+                l_f.y_top = r_y[0]
+                l_f.x_bottom = r_x[2]
+                l_f.y_bottom = r_y[2]
+                r_f.x_top = l_x[0]
+                r_f.y_top = l_y[0]
+                r_f.x_bottom = l_x[2]
+                r_f.y_bottom = l_y[2]
             r_f.x_middle = l_x[1]
             r_f.y_middle = l_y[1]
             l_f.x_middle = r_x[1]
@@ -442,6 +461,7 @@ def pred_unet(img_path):
 
 if __name__ == '__main__':
     import os
+
     # unet test
     # path = "/home/valeogamer/Загрузки/Unet_BG/"
     # path_imgs = os.listdir(path)
@@ -460,12 +480,13 @@ if __name__ == '__main__':
     mid_x = False
 
     # для определения вверхней точки апроксимацией (вверхняя точка)
-    apprx_line_top = True
-    apprx_viz = True
-    apply_yolo = True
+    apprx_line_top = False
+    apprx_viz = False
+    apply_yolo = False
+    full_yolo = False
 
     # % соотношение вверхней точки
-    percent = 45
+    percent = 50
 
     # извлекаем контур изображения
     Foot.contours, Foot.gray, Foot.image = Foot.image_to_countors(img_path)
@@ -514,7 +535,7 @@ if __name__ == '__main__':
 
     # Определение центральной точки с применением YOLO
     if apply_yolo:
-        yolo_key_point(img_path, left_foot, right_foot)
+        yolo_key_point(img_path, left_foot, right_foot, full=full_yolo)
 
     #  Определение вверхней точки с помощью апроксимации двух боковых кривых и нахождения средней кривой между нимим
     if apprx_line_top:
