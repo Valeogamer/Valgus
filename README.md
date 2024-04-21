@@ -177,10 +177,14 @@ ___
 
 ### - [x] Начата реализация веб решения.
   (16/04/2024) \
-  - Выбор фреймворка
+  - Выбор фреймворка (Flask/Django/FastAPI)
   - Изучение фреймворка
   - Тестовые страницы
-  
+
+### - [x] Реализация макета страниц веб приложения.
+  (21/04/2024) \
+  - Основы Flask/SqlAlchemy
+  - Реализованы макеты страниц Home/Tutorial/About
 
 
 ## Результат
@@ -196,8 +200,8 @@ ___
 
 ___
 
+- [x] [МОИ ЗАМЕТКИ ПО ВКР(Notion)](https://www.notion.so/valeogamer/6b1b24f878ef4167a9469d566dcf8406)
 - [x] [Пронация(видео)](https://youtu.be/7ec8YnKBCt0?si=XBUyKiy460pbOQat)
 - [x] [КЛАССИФИКАЦИЯ ПЛОСКО-ВАЛЬГУСНОЙ ДЕФОРМАЦИИ СТОП](http://vestnik.krsu.edu.kg/archive/15/1139)
-- [x] [Заметки по ВКР(Notion)](https://www.notion.so/valeogamer/6b1b24f878ef4167a9469d566dcf8406)
 
-@Valeogamer
+@Valeogamer, 2023-2024
