@@ -3,5 +3,17 @@
 {% block title %}Главная страница{% endblock %}
 
 {% block content %}
-    <h1>Главная страница</h1>
+<div class="container">
+    <h1 class="mt-5 mb-4">Загрузка изображения</h1>
+    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="fileInput" class="form-label">Выберите изображение для загрузки</label>
+            <input type="file" id="fileInput" name="file" class="form-control" accept="image/*">
+        </div>
+        <div class="mb-3">
+            <img id="imagePreview" class="preview-image img-fluid rounded mx-auto d-block" src="#" alt="Предпросмотр изображения" style="display: none;">
+        </div>
+        <button type="submit" class="btn btn-primary">Загрузить</button>
+    </form>
+</div>
 {% endblock %}

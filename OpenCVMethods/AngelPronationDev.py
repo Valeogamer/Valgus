@@ -1,3 +1,4 @@
+import io
 import cv2
 import math
 import numpy as np
@@ -9,7 +10,7 @@ from scipy.interpolate import interp1d
 # from sklearn.preprocessing import Binarizer
 # from tensorflow.keras.models import load_model
 
-model_yolo = YOLO('best534.pt')
+model_yolo = YOLO('C:/PyProjects/Valgus/OpenCVMethods/best534.pt')
 # model_unet = load_model('unet_model_other_foot.h5')
 IMAGE_SIZE = (640, 640)
 PLOTS_DPI = 150
@@ -255,8 +256,8 @@ class Foot:
                                                left_foot.y_middle, left_foot.x_bottom, left_foot.y_bottom)
         right_angl = Foot.angle_between_vectors(right_foot.x_top, right_foot.y_top, right_foot.x_middle,
                                                 right_foot.y_middle, right_foot.x_bottom, right_foot.y_bottom)
-        # plt.text(left.x_middle, left.y_middle, f'{left_angl:.04}', fontsize=15, color='blue', ha='right')
-        # plt.text(right.x_middle, right.y_middle, f'{right_angl:.04}', fontsize=15, color='blue', ha='left')
+        plt.text(left.x_middle, left.y_middle, f'{left_angl:.04}', fontsize=15, color='blue', ha='right')
+        plt.text(right.x_middle, right.y_middle, f'{right_angl:.04}', fontsize=15, color='blue', ha='left')
         # plt.xticks([])
         # plt.yticks([])
         plt.xlabel("Ось X")

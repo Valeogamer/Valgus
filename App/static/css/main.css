@@ -29,3 +29,8 @@ footer {
     height: 30px;
     width: 30px;
 }
+
+.preview-image {
+    max-width: 50%;
+    max-height: 80vh; /* или другое значение, чтобы изображение не выходило за пределы страницы */
+}
