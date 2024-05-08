@@ -4,7 +4,10 @@ import numpy as np
 # import tensorflow as tf
 from ultralytics import YOLO
 from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
+import matplotlib
 
+matplotlib.use('agg')
 # from sklearn.preprocessing import Binarizer
 # from tensorflow.keras.models import load_model
 
@@ -22,7 +25,6 @@ class Foot:
     gray = None
     contours = None
     x_contours = y_contours = []
-    x_top = y_top = x_middle = y_middle = x_bottom = y_bottom = []
     left = None
     right = None
 
@@ -171,20 +173,20 @@ class Foot:
         self.y_up_r = self.y_min
         self.x_down_r = pred_x_r[0]
         self.y_down_r = self.y_middle
-        # plt.plot(n_x_l, n_y_l)
-        # plt.plot(n_x_r, n_y_r)
-        # plt.plot(pred_x_l, new_Y, '-r^')
-        # plt.plot(pred_x_r, new_Y, '-g^')
-        # plt.plot([pred_x_l[1], pred_x_l[0], self.x_middle - self.x_middle / 2],
-        #          [self.y_min, self.y_middle, self.y_middle], '-y*')
-        # plt.plot([pred_x_r[1], pred_x_r[0], self.x_middle], [self.y_min, self.y_middle, self.y_middle], '-b*')
-        # plt.plot([abs((pred_x_r[1] + pred_x_l[1]) / 2), self.x_middle, pred_x_l[0]],
-        #          [self.y_min, self.y_middle, self.y_middle], '-r^')
-        # plt.gca().invert_yaxis()
-        # plt.show()
-        # print(ang_l)
-        # print(ang_r)
-        # print(ang_t)
+        plt.plot(n_x_l, n_y_l)
+        plt.plot(n_x_r, n_y_r)
+        plt.plot(pred_x_l, new_Y, '-r^')
+        plt.plot(pred_x_r, new_Y, '-g^')
+        plt.plot([pred_x_l[1], pred_x_l[0], self.x_middle - self.x_middle / 2],
+                 [self.y_min, self.y_middle, self.y_middle], '-y*')
+        plt.plot([pred_x_r[1], pred_x_r[0], self.x_middle], [self.y_min, self.y_middle, self.y_middle], '-b*')
+        plt.plot([abs((pred_x_r[1] + pred_x_l[1]) / 2), self.x_middle, pred_x_l[0]],
+                 [self.y_min, self.y_middle, self.y_middle], '-r^')
+        plt.gca().invert_yaxis()
+        plt.show()
+        print(ang_l)
+        print(ang_r)
+        print(ang_t)
         # между контурами pred_x_l, new_Y и pred_x_r, new_Y построить линию
         return (n_x_l, n_y_l), (n_x_r, n_y_r)
 
@@ -220,48 +222,45 @@ class Foot:
 
         return angle_deg
 
-    # @staticmethod
-    # def visualization(left, right, apprx_l=False):
-    #     """
-    #     Визуализация
-    #     """
-    #     fig, ax = plt.subplots()
-    #     ax.plot(left.x_top, left.y_top, 'r*')
-    #     ax.plot(left.x_middle, left.y_middle, 'g*')
-    #     ax.plot(left.x_bottom, left.y_bottom, 'r*')
-    #     ax.plot([left.x_top, left.x_middle, left.x_bottom], [left.y_top, left.y_middle, left.y_bottom], '-ro')
-    #     ax.plot(right.x_top, right.y_top, 'r*')
-    #     ax.plot(right.x_middle, right.y_middle, 'g*')
-    #     ax.plot(right.x_bottom, right.y_bottom, 'r*')
-    #     ax.plot([right.x_top, right.x_middle, right.x_bottom], [right.y_top, right.y_middle, right.y_bottom], '-ro')
-    #     if apprx_l:
-    #         lw = 3
-    #         ax.plot([left.x_up_l, left.x_down_l, left.x_middle - left.x_middle / 2],
-    #                 [left.y_up_l, left.y_down_l, left.y_middle], '-c*', linewidth=lw)
-    #         ax.plot([left.x_up_r, left.x_down_r, left.x_middle],
-    #                 [left.y_up_r, left.y_down_r, left.y_middle], '-b*', linewidth=lw)
-    #         ax.plot([abs((left.x_up_l + left.x_up_r) / 2), left.x_middle, left.x_down_l],
-    #                 [left.y_min, left.y_middle, left.y_middle], '-r^', linewidth=lw)
-    #         ax.plot([left.x_up_l, left.x_down_l, left.x_middle - left.x_middle / 4],
-    #                 [left.y_up_l, left.y_down_l, left.y_middle], '-c*', linewidth=lw)
-    #         ax.plot([left.x_up_r, left.x_down_r, left.x_middle],
-    #                 [left.y_up_r, left.y_down_r, left.y_middle], '-b*', linewidth=lw)
-    #         ax.plot([abs((left.x_up_l + left.x_up_r) / 2), left.x_middle, left.x_down_l],
-    #                 [left.y_min, left.y_middle, left.y_middle], '-r^', linewidth=lw)
-    #     ax.invert_yaxis()
-    #     ax.imshow(Foot.image.copy())
-    #     left_angl = Foot.angle_between_vectors(left.x_top, left.y_top, left.x_middle,
-    #                                            left.y_middle, left.x_bottom, left.y_bottom)
-    #     right_angl = Foot.angle_between_vectors(left.x_top, left.y_top, left.x_middle,
-    #                                             left.y_middle, left.x_bottom, left.y_bottom)
-    #     ax.text(left.x_middle, left.y_middle, f'{left_angl:.04}', fontsize=15, color='blue', ha='right')
-    #     ax.text(right.x_middle, right.y_middle, f'{right_angl:.04}', fontsize=15, color='blue', ha='left')
-    #     ax.axis('off')
-    #     # buffer = io.BytesIO()
-    #     # plt.savefig(buffer, format='png', bbox_inches='tight', pad_inches=0)
-    #     # buffer.seek(0)
-    #     # plt.close(fig)  # Закрытие фигуры для освобождения ресурсов
-    #     # return buffer
+    @staticmethod
+    def visualization(left, right, apprx_l=False, img_n=None):
+        """
+        Визуализация
+        """
+        fig, ax = plt.subplots()
+        ax.plot(left.x_top, left.y_top, 'r*')
+        ax.plot(left.x_middle, left.y_middle, 'g*')
+        ax.plot(left.x_bottom, left.y_bottom, 'r*')
+        ax.plot([left.x_top, left.x_middle, left.x_bottom], [left.y_top, left.y_middle, left.y_bottom], '-ro')
+        ax.plot(right.x_top, right.y_top, 'r*')
+        ax.plot(right.x_middle, right.y_middle, 'g*')
+        ax.plot(right.x_bottom, right.y_bottom, 'r*')
+        ax.plot([right.x_top, right.x_middle, right.x_bottom], [right.y_top, right.y_middle, right.y_bottom], '-ro')
+        if apprx_l:
+            lw = 3
+            ax.plot([left.x_up_l, left.x_down_l, left.x_middle - left.x_middle / 2],
+                    [left.y_up_l, left.y_down_l, left.y_middle], '-c*', linewidth=lw)
+            ax.plot([left.x_up_r, left.x_down_r, left.x_middle],
+                    [left.y_up_r, left.y_down_r, left.y_middle], '-b*', linewidth=lw)
+            ax.plot([abs((left.x_up_l + left.x_up_r) / 2), left.x_middle, left.x_down_l],
+                    [left.y_min, left.y_middle, left.y_middle], '-r^', linewidth=lw)
+            ax.plot([left.x_up_l, left.x_down_l, left.x_middle - left.x_middle / 4],
+                    [left.y_up_l, left.y_down_l, left.y_middle], '-c*', linewidth=lw)
+            ax.plot([left.x_up_r, left.x_down_r, left.x_middle],
+                    [left.y_up_r, left.y_down_r, left.y_middle], '-b*', linewidth=lw)
+            ax.plot([abs((left.x_up_l + left.x_up_r) / 2), left.x_middle, left.x_down_l],
+                    [left.y_min, left.y_middle, left.y_middle], '-r^', linewidth=lw)
+        ax.invert_yaxis()
+        ax.imshow(Foot.image.copy())
+        left_angl = Foot.angle_between_vectors(left.x_top, left.y_top, left.x_middle,
+                                               left.y_middle, left.x_bottom, left.y_bottom)
+        right_angl = Foot.angle_between_vectors(right.x_top, right.y_top, right.x_middle,
+                                                right.y_middle, right.x_bottom, right.y_bottom)
+        ax.text(left.x_middle, left.y_middle, f'{left_angl:.04}', fontsize=15, color='blue', ha='right')
+        ax.text(right.x_middle, right.y_middle, f'{right_angl:.04}', fontsize=15, color='blue', ha='left')
+        ax.axis('off')
+        plt.savefig(f'C:/PyProjects/Valgus/App/static/temp/processed/{img_n}', bbox_inches='tight',
+                    pad_inches=0)
 
     @staticmethod
     def image_to_countors(img: str, tresh_begin: int = 25, tresh_end: int = 255):
@@ -454,7 +453,7 @@ def pred_unet(img_path):
         plt.close()
 
 
-def image_process(img_path):
+def image_process(img_path=None, file_name=None):
     # img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00496.png'
     # для обрезания пальцев с помощью апркосимации (средняя точка)
     contour_mid = False
@@ -464,11 +463,11 @@ def image_process(img_path):
     # для определения вверхней точки апроксимацией (вверхняя точка)
     apprx_line_top = False
     apprx_viz = False
-    apply_yolo = False
+    apply_yolo = True
     full_yolo = False
 
     # % соотношение вверхней точки
-    percent = 50
+    percent = 45
 
     # извлекаем контур изображения
     Foot.contours, Foot.gray, Foot.image = Foot.image_to_countors(img_path)
@@ -528,11 +527,11 @@ def image_process(img_path):
         apprx_viz = True
 
     # Визуализация
-    # buff = Foot.visualization(left_foot, right_foot, apprx_l=apprx_viz)
-    # return buff
-    return Foot, left_foot, right_foot
+    Foot.visualization(left_foot, right_foot, apprx_l=apprx_viz, img_n=file_name)
+    return True
+
 
 if __name__ == '__main__':
-    img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00496.png'
+    img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00502.png'
     image_process(img_path)
     # pass
