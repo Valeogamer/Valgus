@@ -1,20 +1,26 @@
 import cv2
 import math
 import numpy as np
-# import tensorflow as tf
+import tensorflow as tf
 from ultralytics import YOLO
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import matplotlib
 
 matplotlib.use('agg')
-# from sklearn.preprocessing import Binarizer
-# from tensorflow.keras.models import load_model
+from sklearn.preprocessing import Binarizer
+from tensorflow.keras.models import load_model
+import os
 
-model_yolo = YOLO("C:/PyProjects/Valgus/App/models/best534.pt")
-# model_unet = load_model('C:/PyProjects/Valgus/App/models/unet_model_other_foot.h5')
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+model_yolo = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
+model_unet = load_model('/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model_other_foot.h5')
 IMAGE_SIZE = (640, 640)
 PLOTS_DPI = 150
+result_path = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+down_path = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
+unet_path = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
 
 
 class Foot:
@@ -259,7 +265,7 @@ class Foot:
         ax.text(left.x_middle, left.y_middle, f'{left_angl:.04}', fontsize=15, color='blue', ha='right')
         ax.text(right.x_middle, right.y_middle, f'{right_angl:.04}', fontsize=15, color='blue', ha='left')
         ax.axis('off')
-        plt.savefig(f'C:/PyProjects/Valgus/App/static/temp/processed/{img_n}', bbox_inches='tight',
+        plt.savefig(f'{result_path}{img_n}', bbox_inches='tight',
                     pad_inches=0)
 
     @staticmethod
@@ -419,7 +425,7 @@ def load_test_image(filepath):
     return img / 255.0
 
 
-def pred_unet(img_path):
+def pred_unet(img_path, filename):
     """
     Сегментация изображения
     """
@@ -449,12 +455,16 @@ def pred_unet(img_path):
         # Сохраняем маскированное изображение
         plt.imshow(orig_imgs[i] * pred_mask[i])
         plt.axis('off')
-        plt.savefig(f'unet_pred/{img_path[-9:]}', bbox_inches='tight', pad_inches=0)
+        plt.savefig(f'{unet_path}{filename}', bbox_inches='tight', pad_inches=0)
         plt.close()
+    tf.keras.backend.clear_session()
+    file_path = f'{unet_path}{filename}'
+    return file_path
 
 
 def image_process(img_path=None, file_name=None):
-    # img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00496.png'
+    # unet_pred
+    img_path = pred_unet(img_path, file_name)
     # для обрезания пальцев с помощью апркосимации (средняя точка)
     contour_mid = False
     dots = 5
@@ -532,6 +542,6 @@ def image_process(img_path=None, file_name=None):
 
 
 if __name__ == '__main__':
-    img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00502.png'
-    image_process(img_path)
-    # pass
+    # img_path: str = 'C:/Users/Valentin/Desktop/DataTest/00502.png'
+    # image_process(img_path)
+    pass

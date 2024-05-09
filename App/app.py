@@ -7,8 +7,9 @@ import time
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'C:/PyProjects/Valgus/App/static/temp/uploads/'
-PROCESSED_FOLDER = 'C:/PyProjects/Valgus/App/static/temp/processed/'
+DOWNLOAD_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/download/'
+RESULT_FOLDER = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+
 
 @app.route('/')
 def index():
@@ -41,7 +42,7 @@ def upload():
         return 'Пустое имя файла', 400
 
     filename = str(uuid4()) + os.path.splitext(file.filename)[1]  # Создание уникального имени файла
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file_path = os.path.join(DOWNLOAD_PATH, filename)
     file.save(file_path)
     flag = AP.image_process(file_path, filename)
     if flag:
