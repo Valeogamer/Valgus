@@ -35,11 +35,13 @@ def result():
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'file' not in request.files:
-        return 'Изображение не найдено', 400
+        # return 'Изображение не найдено', 400
+        return redirect("/")
 
     file = request.files['file']
     if file.filename == '':
-        return 'Пустое имя файла', 400
+        # return 'Пустое имя файла', 400
+        return redirect("/")
 
     filename = str(uuid4()) + os.path.splitext(file.filename)[1]  # Создание уникального имени файла
     file_path = os.path.join(DOWNLOAD_PATH, filename)
@@ -52,3 +54,4 @@ def upload():
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)  # threaded=True
+    # app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
