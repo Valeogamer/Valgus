@@ -117,7 +117,9 @@ class Foots:
         """
         Визуализация
         """
+        plt.clf()
         fig, ax = plt.subplots()
+        ax.clear()
         ax.plot(self.left_foot.x_top, self.left_foot.y_top, 'r*')
         ax.plot(self.left_foot.x_middle, self.left_foot.y_middle, 'g*')
         ax.plot(self.left_foot.x_bottom, self.left_foot.y_bottom, 'r*')
@@ -148,7 +150,7 @@ class Foots:
                      self.right_foot.x_down_l],
                     [self.right_foot.y_min, self.right_foot.y_middle, self.right_foot.y_middle], '-r^', linewidth=lw)
         ax.invert_yaxis()
-        ax.imshow(self.image.copy())
+        ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
         ax.text(self.left_foot.x_middle, self.left_foot.y_middle, f'{left_angl:.04}', fontsize=15, color='blue',
@@ -260,6 +262,7 @@ class Foots:
         pred = MODEL_UNET.predict(np.array(orig_imgs))
         pred_mask = Binarizer(threshold=0.5).transform(pred.reshape(-1, 1)).reshape(pred.shape)
         # Создаем директорию для сохранения изображений, если её еще нет
+        plt.clf()
         for i in range(len(orig_imgs)):
             # Сохраняем исходное изображение
             # plt.imshow(pred_imgs[i])
