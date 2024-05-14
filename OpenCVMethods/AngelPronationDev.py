@@ -489,7 +489,7 @@ class Foot:
 
 if __name__ == '__main__':
     foots = Foots()
-    foots.img_path_orig = '/home/valeogamer/Загрузки/DataTest/00496.png'
+    foots.img_path_orig = '/home/valeogamer/Загрузки/DataTest/00488.png'
     foots.img_name = foots.img_path_orig[-9:]
     foots.left_foot.link = foots.right_foot
     foots.right_foot.link = foots.left_foot
@@ -501,10 +501,10 @@ if __name__ == '__main__':
     mid_x = False
 
     # для определения вверхней точки апроксимацией (вверхняя точка)
-    apprx_line_top = True
+    apprx_line_top = False
     apprx_viz = False
     apply_yolo = True
-    full_yolo = False
+    full_yolo = True
 
     # % соотношение вверхней точки
     percent = 50
