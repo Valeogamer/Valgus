@@ -1,0 +1,46 @@
+/* HEADER */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: #F0F8FF;
+    padding: 10px;
+}
+
+.header__img {
+    height: 64px;
+    width: 64px;
+}
+
+/* FOOTER */
+footer {
+    background-color: #F0F8FF; /* задайте цвет фона, который вам нравится */
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+}
+
+.footer__img {
+    height: 30px;
+    width: 30px;
+}
+
+.preview-image {
+    max-width: 50%;
+    max-height: 50vh; /* или другое значение, чтобы изображение не выходило за пределы страницы */
+}
+
+/* FLEXBOX LAYOUT FOR CONTENT AND FOOTER */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.content {
+    flex: 1;
+}
+
+.footer {
+    margin-top: auto;
+}

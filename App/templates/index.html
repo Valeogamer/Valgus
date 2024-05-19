@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mt-5 mb-4">Загрузка изображения</h1>
+    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="nameInput" class="form-label">Имя</label>
+            <input type="text" id="nameInput" name="name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="ageInput" class="form-label">Возраст</label>
+            <input type="number" id="ageInput" name="age" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="fileInput" class="form-label">Выберите изображение для загрузки</label>
+            <input type="file" id="fileInput" name="file" class="form-control" accept="image/*" required>
+        </div>
+        <div class="mb-3">
+            <img id="imagePreview" class="preview-image img-fluid rounded mx-auto d-block" src="#" alt="" style="display: none;">
+        </div>
+        <button type="submit" class="btn btn-primary">Загрузить</button>
+    </form>
+</div>
+{% endblock %}
