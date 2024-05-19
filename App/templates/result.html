@@ -6,10 +6,24 @@
 <div class="container">
     <h1 class="mt-5 mb-4">Результат обработки</h1>
     <div class="row">
-        <div class="col-md-6">
-            <img src="{{ url_for('static', filename='temp/result/' + img_name) }}" class="img-fluid rounded" alt="Procces Image">
-        </div>
+        {% if img_name %}
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='temp/result/' + img_name) }}" class="img-fluid rounded" alt="Processed Image">
+            </div>
+            <div class="col-md-6">
+                <h3>Информация о пользователе</h3>
+                <p><strong>Имя:</strong> {{ name }}</p>
+                <p><strong>Возраст:</strong> {{ age }}</p>
+                <p><strong>Левая нога:</strong> {{ left_foot }}</p>
+                <p><strong>Правая нога:</strong> {{ right_foot }}</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Загрузить другое изображение</a>
+            </div>
+        {% else %}
+            <div class="col-md-12">
+                <p class="text-danger">Извините, произошла ошибка при обработке изображения. Пожалуйста, попробуйте снова.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Вернуться на главную</a>
+            </div>
+        {% endif %}
     </div>
 </div>
-
 {% endblock %}

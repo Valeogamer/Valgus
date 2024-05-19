@@ -153,6 +153,8 @@ class Foots:
         ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
+        self.left_foot.angle = int(left_angl)
+        self.right_foot.angle = int(right_angl)
         ax.text(self.left_foot.x_middle, self.left_foot.y_middle, f'{left_angl:.04}', fontsize=15, color='blue',
                 ha='right')
         ax.text(self.right_foot.x_middle, self.right_foot.y_middle, f'{right_angl:.04}', fontsize=15, color='blue',
@@ -298,6 +300,7 @@ class Foot:
     def __init__(self, type: str):
         self.type: str = type
         self.link = None
+        self.angle = None # вычисленный угол
         self.x_coords: list = []  # координаты контура
         self.y_coords: list = []  # координаты контура
         self.y_max: int = 0  # макс по Y контура
@@ -577,7 +580,7 @@ def image_process(img_path=None, file_name=None):
         foots.angle_between_vectors(foots.left_foot)) + "\033[0m")
     print("\033[32m" + f'{foots.right_foot}:' + str(
         foots.angle_between_vectors(foots.right_foot)) + "\033[0m")
-    return True
+    return foots.left_foot.angle, foots.right_foot.angle
 
 # if __name__ == '__main__':
 #     # img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00488.png'

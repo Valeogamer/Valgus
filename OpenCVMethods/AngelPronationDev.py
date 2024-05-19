@@ -496,7 +496,7 @@ if __name__ == '__main__':
     # unet_pred test
     foots.pred_unet()
     # для обрезания пальцев с помощью апркосимации (средняя точка)
-    contour_mid = False
+    contour_mid = True
     dots = 5
     mid_x = False
 

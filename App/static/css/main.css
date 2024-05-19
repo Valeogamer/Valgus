@@ -1,5 +1,4 @@
 /* HEADER */
-
 header {
     position: sticky;
     top: 0;
@@ -14,14 +13,10 @@ header {
 }
 
 /* FOOTER */
-
 footer {
-    position: fixed;
-    bottom: -25px;
     background-color: #F0F8FF; /* задайте цвет фона, который вам нравится */
     padding: 20px;
     text-align: center;
-    z-index: 1000;
     width: 100%;
 }
 
@@ -33,4 +28,19 @@ footer {
 .preview-image {
     max-width: 50%;
     max-height: 50vh; /* или другое значение, чтобы изображение не выходило за пределы страницы */
+}
+
+/* FLEXBOX LAYOUT FOR CONTENT AND FOOTER */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.content {
+    flex: 1;
+}
+
+.footer {
+    margin-top: auto;
 }
