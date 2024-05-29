@@ -9,8 +9,11 @@ from scipy.interpolate import interp1d
 from sklearn.preprocessing import Binarizer
 from tensorflow.keras.models import load_model
 
+import onnxruntime as ort
+
 MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
 MODEL_UNET = load_model('/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model_other_foot.h5')
+MODEL_UNET_ONNX = ort.InferenceSession('/home/valeogamer/PycharmProjects/Valgus/App/models/model_unet.onnx')
 IMAGE_SIZE = (640, 640)
 PLOTS_DPI = 150
 

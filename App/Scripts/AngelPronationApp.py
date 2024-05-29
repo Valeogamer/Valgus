@@ -6,6 +6,8 @@ from ultralytics import YOLO
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import matplotlib
+from rembg import remove
+from PIL import Image
 
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
@@ -29,6 +31,9 @@ class Foots:
         self.img_path_unet = None
         self.img_path_result = None
         self.img_name = None
+        self.img_width = None
+        self.img_height = None
+        self.img_size = None
         self.left_foot = Foot("left")
         self.right_foot = Foot("right")
         self.image = None
@@ -118,7 +123,8 @@ class Foots:
         Визуализация
         """
         plt.clf()
-        fig, ax = plt.subplots()
+        # fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6.4, 6.4), dpi=100)
         ax.clear()
         ax.plot(self.left_foot.x_top, self.left_foot.y_top, 'r*')
         ax.plot(self.left_foot.x_middle, self.left_foot.y_middle, 'g*')
@@ -160,6 +166,7 @@ class Foots:
         ax.text(self.right_foot.x_middle, self.right_foot.y_middle, f'{right_angl:.04}', fontsize=15, color='blue',
                 ha='left')
         ax.axis('off')
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем поля
         plt.savefig(f'{RESULT_PATH}{self.img_name}', bbox_inches='tight',
                     pad_inches=0)
         self.img_path_result = RESULT_PATH + self.img_name
@@ -193,7 +200,7 @@ class Foots:
         flag = True
         conf_i = 0.10
         while flag:
-            results = MODEL_YOLO.predict(self.img_path_unet, conf=conf_i)
+            results = MODEL_YOLO.predict(self.img_path_unet, conf=conf_i, imgsz=(640, 640))
             check_l = []
             for r in results:
                 check_l.append(r.keypoints.xy.tolist())
@@ -256,11 +263,30 @@ class Foots:
         img = tf.image.resize(img, IMAGE_SIZE)
         return img / 255.0
 
+    def remove_and_black_background(self):
+        # Удаление фона с помощью rembg
+        input_image = Image.open(self.img_path_orig)
+        output_image = remove(input_image)
+        self.img_size = output_image.size
+        self.img_height, self.img_width = output_image.size
+        # Создание черного фона
+        black_background = Image.new("RGB", output_image.size, (0, 0, 0))
+
+        # Наложение изображения с прозрачным фоном на черный фон
+        black_background.paste(output_image, (0, 0), output_image)
+
+        black_background = np.array(black_background)
+        img = tf.convert_to_tensor(black_background)
+        img = tf.image.resize(img, IMAGE_SIZE)
+        return img / 255.0
+
     def pred_unet(self):
         """
         Сегментация изображения
         """
-        orig_imgs = [self.load_test_image()]
+        processed_image = self.remove_and_black_background()
+        orig_imgs = [processed_image]
+        # orig_imgs = [self.load_test_image()]
         pred = MODEL_UNET.predict(np.array(orig_imgs))
         pred_mask = Binarizer(threshold=0.5).transform(pred.reshape(-1, 1)).reshape(pred.shape)
         # Создаем директорию для сохранения изображений, если её еще нет
@@ -283,10 +309,12 @@ class Foots:
             # plt.axis('off')
             # plt.savefig(f'predictions/binary_mask_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
             # plt.close()
-
             # Сохраняем маскированное изображение
+            # plt.figure()
+            fig = plt.figure(figsize=(6.4, 6.4), dpi=100)
             plt.imshow(orig_imgs[i] * pred_mask[i])
             plt.axis('off')
+            plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем поля
             plt.savefig(f'{UNET_PATH}{self.img_name}', bbox_inches='tight', pad_inches=0)
             plt.close()
         tf.keras.backend.clear_session()
@@ -300,7 +328,7 @@ class Foot:
     def __init__(self, type: str):
         self.type: str = type
         self.link = None
-        self.angle = None # вычисленный угол
+        self.angle = None  # вычисленный угол
         self.x_coords: list = []  # координаты контура
         self.y_coords: list = []  # координаты контура
         self.y_max: int = 0  # макс по Y контура
@@ -582,8 +610,8 @@ def image_process(img_path=None, file_name=None):
         foots.angle_between_vectors(foots.right_foot)) + "\033[0m")
     return foots.left_foot.angle, foots.right_foot.angle
 
+
 # if __name__ == '__main__':
-#     # img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00488.png'
-#     # img_name: str = img_path[-9:]
-#     # image_process(img_path, img_name)
-#     pass
+#     img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00489.png'
+#     img_name: str = img_path[-9:]
+#     image_process(img_path, img_name)
