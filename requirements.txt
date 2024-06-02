@@ -192,3 +192,7 @@ Werkzeug==3.0.1
 widgetsnbextension==4.0.10
 wrapt==1.14.1
 yarl==1.9.4
+
+Flask~=3.0.3
+rembg~=2.0.57
+onnxruntime~=1.18.0

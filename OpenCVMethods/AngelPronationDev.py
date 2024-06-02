@@ -3,19 +3,26 @@ import math
 import numpy as np
 import tensorflow as tf
 from ultralytics import YOLO
-import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
+import matplotlib
+from rembg import remove
+from PIL import Image
 
+matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
 from tensorflow.keras.models import load_model
+import os
 
-import onnxruntime as ort
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
 MODEL_UNET = load_model('/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model_other_foot.h5')
-MODEL_UNET_ONNX = ort.InferenceSession('/home/valeogamer/PycharmProjects/Valgus/App/models/model_unet.onnx')
 IMAGE_SIZE = (640, 640)
 PLOTS_DPI = 150
+RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
+UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
 
 
 class Foots:
@@ -24,7 +31,9 @@ class Foots:
         self.img_path_unet = None
         self.img_path_result = None
         self.img_name = None
-        self.img_name = None
+        self.img_width = None
+        self.img_height = None
+        self.img_size = None
         self.left_foot = Foot("left")
         self.right_foot = Foot("right")
         self.image = None
@@ -113,50 +122,54 @@ class Foots:
         """
         Визуализация
         """
-        plt.plot(self.left_foot.x_top, self.left_foot.y_top, 'r*')
-        plt.plot(self.left_foot.x_middle, self.left_foot.y_middle, 'g*')
-        plt.plot(self.left_foot.x_bottom, self.left_foot.y_bottom, 'r*')
-        plt.plot([self.left_foot.x_top, self.left_foot.x_middle, self.left_foot.x_bottom],
-                 [self.left_foot.y_top, self.left_foot.y_middle, self.left_foot.y_bottom], '-ro')
-        plt.plot(self.right_foot.x_top, self.right_foot.y_top, 'r*')
-        plt.plot(self.right_foot.x_middle, self.right_foot.y_middle, 'g*')
-        plt.plot(self.right_foot.x_bottom, self.right_foot.y_bottom, 'r*')
-        plt.plot([self.right_foot.x_top, self.right_foot.x_middle, self.right_foot.x_bottom],
-                 [self.right_foot.y_top, self.right_foot.y_middle, self.right_foot.y_bottom],
-                 '-ro')
+        plt.clf()
+        # fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6.4, 6.4), dpi=100)
+        ax.clear()
+        ax.plot(self.left_foot.x_top, self.left_foot.y_top, 'r*')
+        ax.plot(self.left_foot.x_middle, self.left_foot.y_middle, 'g*')
+        ax.plot(self.left_foot.x_bottom, self.left_foot.y_bottom, 'r*')
+        ax.plot([self.left_foot.x_top, self.left_foot.x_middle, self.left_foot.x_bottom],
+                [self.left_foot.y_top, self.left_foot.y_middle, self.left_foot.y_bottom], '-ro')
+        ax.plot(self.right_foot.x_top, self.right_foot.y_top, 'r*')
+        ax.plot(self.right_foot.x_middle, self.right_foot.y_middle, 'g*')
+        ax.plot(self.right_foot.x_bottom, self.right_foot.y_bottom, 'r*')
+        ax.plot([self.right_foot.x_top, self.right_foot.x_middle, self.right_foot.x_bottom],
+                [self.right_foot.y_top, self.right_foot.y_middle, self.right_foot.y_bottom],
+                '-ro')
         if apprx_l:
             lw = 3
-            plt.plot(
+            ax.plot(
                 [self.left_foot.x_up_l, self.left_foot.x_down_l, self.left_foot.x_middle - self.left_foot.x_middle / 2],
                 [self.left_foot.y_up_l, self.left_foot.y_down_l, self.left_foot.y_middle], '-c*', linewidth=lw)
-            plt.plot([self.left_foot.x_up_r, self.left_foot.x_down_r, self.left_foot.x_middle],
-                     [self.left_foot.y_up_r, self.left_foot.y_down_r, self.left_foot.y_middle], '-b*', linewidth=lw)
-            plt.plot([abs((self.left_foot.x_up_l + self.left_foot.x_up_r) / 2), self.left_foot.x_middle,
-                      self.left_foot.x_down_l],
-                     [self.left_foot.y_min, self.left_foot.y_middle, self.left_foot.y_middle], '-r^', linewidth=lw)
-            plt.plot([self.right_foot.x_up_l, self.right_foot.x_down_l,
-                      self.right_foot.x_middle - self.right_foot.x_middle / 4],
-                     [self.right_foot.y_up_l, self.right_foot.y_down_l, self.right_foot.y_middle], '-c*', linewidth=lw)
-            plt.plot([self.right_foot.x_up_r, self.right_foot.x_down_r, self.right_foot.x_middle],
-                     [self.right_foot.y_up_r, self.right_foot.y_down_r, self.right_foot.y_middle], '-b*', linewidth=lw)
-            plt.plot([abs((self.right_foot.x_up_l + self.right_foot.x_up_r) / 2), self.right_foot.x_middle,
-                      self.right_foot.x_down_l],
-                     [self.right_foot.y_min, self.right_foot.y_middle, self.right_foot.y_middle], '-r^', linewidth=lw)
-        plt.gca().invert_yaxis()
-        plt.imshow(self.image)
+            ax.plot([self.left_foot.x_up_r, self.left_foot.x_down_r, self.left_foot.x_middle],
+                    [self.left_foot.y_up_r, self.left_foot.y_down_r, self.left_foot.y_middle], '-b*', linewidth=lw)
+            ax.plot([abs((self.left_foot.x_up_l + self.left_foot.x_up_r) / 2), self.left_foot.x_middle,
+                     self.left_foot.x_down_l],
+                    [self.left_foot.y_min, self.left_foot.y_middle, self.left_foot.y_middle], '-r^', linewidth=lw)
+            ax.plot([self.right_foot.x_up_l, self.right_foot.x_down_l,
+                     self.right_foot.x_middle - self.right_foot.x_middle / 4],
+                    [self.right_foot.y_up_l, self.right_foot.y_down_l, self.right_foot.y_middle], '-c*', linewidth=lw)
+            ax.plot([self.right_foot.x_up_r, self.right_foot.x_down_r, self.right_foot.x_middle],
+                    [self.right_foot.y_up_r, self.right_foot.y_down_r, self.right_foot.y_middle], '-b*', linewidth=lw)
+            ax.plot([abs((self.right_foot.x_up_l + self.right_foot.x_up_r) / 2), self.right_foot.x_middle,
+                     self.right_foot.x_down_l],
+                    [self.right_foot.y_min, self.right_foot.y_middle, self.right_foot.y_middle], '-r^', linewidth=lw)
+        ax.invert_yaxis()
+        ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
-        plt.text(self.left_foot.x_middle, self.left_foot.y_middle, f'{left_angl:.04}', fontsize=15, color='blue',
-                 ha='right')
-        plt.text(self.right_foot.x_middle, self.right_foot.y_middle, f'{right_angl:.04}', fontsize=15, color='blue',
-                 ha='left')
-        plt.xlabel("Ось X")
-        plt.ylabel("Ось Y")
-        plt.show()
-        # plt.savefig("plot.png")
-        # if img_path:
-        #     plt.savefig("plot.png")
-        # plt.savefig(f'{img_path[-9:-4]}.png', dpi=100)
+        self.left_foot.angle = int(left_angl)
+        self.right_foot.angle = int(right_angl)
+        ax.text(self.left_foot.x_middle, self.left_foot.y_middle, f'{left_angl:.04}', fontsize=15, color='blue',
+                ha='right')
+        ax.text(self.right_foot.x_middle, self.right_foot.y_middle, f'{right_angl:.04}', fontsize=15, color='blue',
+                ha='left')
+        ax.axis('off')
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем поля
+        plt.savefig(f'{RESULT_PATH}{self.img_name}', bbox_inches='tight',
+                    pad_inches=0)
+        self.img_path_result = RESULT_PATH + self.img_name
 
     def angle_between_vectors(self, link):
         """
@@ -187,7 +200,7 @@ class Foots:
         flag = True
         conf_i = 0.10
         while flag:
-            results = MODEL_YOLO.predict(self.img_path_unet, conf=conf_i)
+            results = MODEL_YOLO.predict(self.img_path_unet, conf=conf_i, imgsz=(640, 640))
             check_l = []
             for r in results:
                 check_l.append(r.keypoints.xy.tolist())
@@ -250,39 +263,45 @@ class Foots:
         img = tf.image.resize(img, IMAGE_SIZE)
         return img / 255.0
 
+    def remove_and_black_background(self):
+        # Удаление фона с помощью rembg
+        input_image = Image.open(self.img_path_orig)
+        output_image = remove(input_image)
+        self.img_size = output_image.size
+        self.img_height, self.img_width = output_image.size
+        # Создание черного фона
+        black_background = Image.new("RGB", output_image.size, (0, 0, 0))
+
+        # Наложение изображения с прозрачным фоном на черный фон
+        black_background.paste(output_image, (0, 0), output_image)
+
+        black_background = np.array(black_background)
+        img = tf.convert_to_tensor(black_background)
+        img = tf.image.resize(img, IMAGE_SIZE)
+        return img / 255.0
+
     def pred_unet(self):
         """
         Сегментация изображения
         """
-        orig_imgs = [self.load_test_image()]
+        processed_image = self.remove_and_black_background()
+        orig_imgs = [processed_image]
+        # orig_imgs = [self.load_test_image()]
         pred = MODEL_UNET.predict(np.array(orig_imgs))
         pred_mask = Binarizer(threshold=0.5).transform(pred.reshape(-1, 1)).reshape(pred.shape)
         # Создаем директорию для сохранения изображений, если её еще нет
+        plt.clf()
         for i in range(len(orig_imgs)):
-            # Сохраняем исходное изображение
-            # plt.imshow(pred_imgs[i])
-            # plt.axis('off')
-            # plt.savefig(f'predictions/test_sample_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
-            # plt.close()
-            #
-            # # Сохраняем мягкую маску
-            # plt.imshow(pred[i], cmap='gray')
-            # plt.axis('off')
-            # plt.savefig(f'predictions/soft_mask_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
-            # plt.close()
-            #
-            # # Сохраняем бинарную маску
-            # plt.imshow(pred_mask[i], cmap='gray')
-            # plt.axis('off')
-            # plt.savefig(f'predictions/binary_mask_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
-            # plt.close()
-
-            # Сохраняем маскированное изображение
+            fig = plt.figure(figsize=(6.4, 6.4), dpi=100)
             plt.imshow(orig_imgs[i] * pred_mask[i])
             plt.axis('off')
-            plt.savefig(f'unet_pred/{self.img_name}', bbox_inches='tight', pad_inches=0)
+            plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем поля
+            plt.savefig(f'{UNET_PATH}{self.img_name}', bbox_inches='tight', pad_inches=0)
             plt.close()
-            self.img_path_unet = f'unet_pred/{self.img_name}'
+        tf.keras.backend.clear_session()
+        file_path = f'{UNET_PATH}{self.img_name}'
+        self.img_path_unet = file_path
+        return file_path
 
 
 class Foot:
@@ -290,6 +309,7 @@ class Foot:
     def __init__(self, type: str):
         self.type: str = type
         self.link = None
+        self.angle = None  # вычисленный угол
         self.x_coords: list = []  # координаты контура
         self.y_coords: list = []  # координаты контура
         self.y_max: int = 0  # макс по Y контура
@@ -443,9 +463,9 @@ class Foot:
                  [self.y_min, self.y_middle, self.y_middle], '-r^')
         plt.gca().invert_yaxis()
         plt.show()
-        # print(ang_l)
-        # print(ang_r)
-        # print(ang_t)
+        print(ang_l)
+        print(ang_r)
+        print(ang_t)
         # между контурами pred_x_l, new_Y и pred_x_r, new_Y построить линию
         return (n_x_l, n_y_l), (n_x_r, n_y_r)
 
@@ -480,7 +500,7 @@ class Foot:
 
         return angle_deg
 
-    def find_x_bounds_for_y(self, tolerance=150):
+    def find_x_bounds_for_y(self, tolerance=250):
         x_bounds = []
         for i in range(len(self.apprx_y_coords)):
             if abs(self.apprx_y_coords[i] - self.y_middle) <= tolerance:
@@ -490,16 +510,17 @@ class Foot:
         return left_x_bound, right_x_bound
 
 
-if __name__ == '__main__':
+def image_process(img_path=None, file_name=None):
     foots = Foots()
-    foots.img_path_orig = '/home/valeogamer/Загрузки/DataTest/00488.png'
-    foots.img_name = foots.img_path_orig[-9:]
+    foots.img_path_orig = img_path
+    foots.img_name = file_name
+    # перекрестная ссылка
     foots.left_foot.link = foots.right_foot
     foots.right_foot.link = foots.left_foot
-    # unet_pred test
+    # unet_pred
     foots.pred_unet()
     # для обрезания пальцев с помощью апркосимации (средняя точка)
-    contour_mid = True
+    contour_mid = False
     dots = 5
     mid_x = False
 
@@ -507,10 +528,10 @@ if __name__ == '__main__':
     apprx_line_top = False
     apprx_viz = False
     apply_yolo = True
-    full_yolo = True
+    full_yolo = False
 
     # % соотношение вверхней точки
-    percent = 50
+    percent = 45
 
     # извлекаем контур изображения
     foots.image_to_countors()
@@ -562,10 +583,16 @@ if __name__ == '__main__':
 
     # Визуализация
     foots.visualization(apprx_l=apprx_viz)
-
-    # Вычисление угла пронации
-    print("\033[31m" + f'{foots.img_name}' + "\033[0m")
+    #
+    print("\033[31m" + str(img_path[-9:]) + "\033[0m")
     print("\033[32m" + f'{foots.left_foot}:' + str(
         foots.angle_between_vectors(foots.left_foot)) + "\033[0m")
     print("\033[32m" + f'{foots.right_foot}:' + str(
         foots.angle_between_vectors(foots.right_foot)) + "\033[0m")
+    return foots.left_foot.angle, foots.right_foot.angle
+
+
+# if __name__ == '__main__':
+#     img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00489.png'
+#     img_name: str = img_path[-9:]
+#     image_process(img_path, img_name)

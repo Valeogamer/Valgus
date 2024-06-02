@@ -292,25 +292,6 @@ class Foots:
         # Создаем директорию для сохранения изображений, если её еще нет
         plt.clf()
         for i in range(len(orig_imgs)):
-            # Сохраняем исходное изображение
-            # plt.imshow(pred_imgs[i])
-            # plt.axis('off')
-            # plt.savefig(f'predictions/test_sample_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
-            # plt.close()
-            #
-            # # Сохраняем мягкую маску
-            # plt.imshow(pred[i], cmap='gray')
-            # plt.axis('off')
-            # plt.savefig(f'predictions/soft_mask_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
-            # plt.close()
-            #
-            # # Сохраняем бинарную маску
-            # plt.imshow(pred_mask[i], cmap='gray')
-            # plt.axis('off')
-            # plt.savefig(f'predictions/binary_mask_{i + 1}.jpg', bbox_inches='tight', pad_inches=0)
-            # plt.close()
-            # Сохраняем маскированное изображение
-            # plt.figure()
             fig = plt.figure(figsize=(6.4, 6.4), dpi=100)
             plt.imshow(orig_imgs[i] * pred_mask[i])
             plt.axis('off')
