@@ -1,23 +1,18 @@
 import cv2
 import math
 import numpy as np
-import tensorflow as tf
 from ultralytics import YOLO
-from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import matplotlib
 from rembg import remove
-from PIL import Image
+from PIL import Image, ImageOps
+import onnxruntime as ort
 
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
-from tensorflow.keras.models import load_model
-import os
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
-MODEL_UNET = load_model('/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model_other_foot.h5')
+MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
 IMAGE_SIZE = (640, 640)
 PLOTS_DPI = 150
 RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
@@ -65,60 +60,7 @@ class Foots:
         self.gray = gray
         self.image = image
 
-    def aprox_contours(self, num_dots=10):
-        """
-        Аппроксимация контура
-        """
-        linear = 'linear'
-        quadratic = 'quadratic'
-        polynomial = 'polynomial'
-        cubic = 'cubic'
-        kind_choice = linear
-        # Получение высоты изображения
-        height = self.image.shape[0]
-        half_height = int(height / 2)
-        # Итерирование по каждому контуру
-        for contour in self.contours:
-            # Извлечение координат x и y из контура
-            x = contour[:, 0, 0]
-            y = contour[:, 0, 1]
-
-            filtered_indices = np.where(y >= half_height)
-            x = x[filtered_indices]
-            y = y[filtered_indices]
-
-            # Интерполяция данных
-            # Делим весь контур на равнные части в интервале от 0 до 1
-            t = np.linspace(0, 1, len(y))
-            # Собираем функцию аппроксимации
-            fx, fy = interp1d(t, x, kind=kind_choice), interp1d(t, y, kind=kind_choice)
-
-            # Определение новых точек контура
-            t_new = np.linspace(0, 1, num_dots)  # Увеличьте количество точек для более гладкой аппроксимации
-            # наоборот ухудшаю для вырезания торчащих элементов
-            x_new, y_new = fx(t_new), fy(t_new)
-
-            if len(self.right_foot.apprx_x_coords) == 0:
-                self.right_foot.apprx_x_coords = x_new
-                self.right_foot.apprx_y_coords = y_new
-            else:
-                self.left_foot.apprx_x_coords = x_new
-                self.left_foot.apprx_y_coords = y_new
-            # Наложение исходного контура на изображение
-            # cv2.drawContours(image, [contour], -1, (0, 255, 0), 2)
-
-            # Наложение аппроксимированного контура на изображение
-            approximated_contour = np.array(list(zip(x_new.astype(int), y_new.astype(int))), dtype=np.int32).reshape(
-                (-1, 1, 2))
-            cv2.polylines(self.image, [approximated_contour], isClosed=True, color=(255, 0, 0), thickness=2)
-
-        # Отображение результата
-        # plt.imshow(cv2.cvtColor(Foot.image, cv2.COLOR_BGR2RGB))
-        # plt.title('Contour Approximation')
-        # plt.gca().invert_yaxis()
-        # plt.show()
-
-    def visualization(self, apprx_l=False):
+    def visualization(self):
         """
         Визуализация
         """
@@ -137,24 +79,6 @@ class Foots:
         ax.plot([self.right_foot.x_top, self.right_foot.x_middle, self.right_foot.x_bottom],
                 [self.right_foot.y_top, self.right_foot.y_middle, self.right_foot.y_bottom],
                 '-ro')
-        if apprx_l:
-            lw = 3
-            ax.plot(
-                [self.left_foot.x_up_l, self.left_foot.x_down_l, self.left_foot.x_middle - self.left_foot.x_middle / 2],
-                [self.left_foot.y_up_l, self.left_foot.y_down_l, self.left_foot.y_middle], '-c*', linewidth=lw)
-            ax.plot([self.left_foot.x_up_r, self.left_foot.x_down_r, self.left_foot.x_middle],
-                    [self.left_foot.y_up_r, self.left_foot.y_down_r, self.left_foot.y_middle], '-b*', linewidth=lw)
-            ax.plot([abs((self.left_foot.x_up_l + self.left_foot.x_up_r) / 2), self.left_foot.x_middle,
-                     self.left_foot.x_down_l],
-                    [self.left_foot.y_min, self.left_foot.y_middle, self.left_foot.y_middle], '-r^', linewidth=lw)
-            ax.plot([self.right_foot.x_up_l, self.right_foot.x_down_l,
-                     self.right_foot.x_middle - self.right_foot.x_middle / 4],
-                    [self.right_foot.y_up_l, self.right_foot.y_down_l, self.right_foot.y_middle], '-c*', linewidth=lw)
-            ax.plot([self.right_foot.x_up_r, self.right_foot.x_down_r, self.right_foot.x_middle],
-                    [self.right_foot.y_up_r, self.right_foot.y_down_r, self.right_foot.y_middle], '-b*', linewidth=lw)
-            ax.plot([abs((self.right_foot.x_up_l + self.right_foot.x_up_r) / 2), self.right_foot.x_middle,
-                     self.right_foot.x_down_l],
-                    [self.right_foot.y_min, self.right_foot.y_middle, self.right_foot.y_middle], '-r^', linewidth=lw)
         ax.invert_yaxis()
         ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
@@ -257,28 +181,33 @@ class Foots:
                 self.left_foot.x_middle = r_x[1]
                 self.left_foot.y_middle = r_y[1]
 
-    def load_test_image(self):
-        img = tf.io.read_file(self.img_path_orig)
-        img = tf.io.decode_png(img, channels=3)
-        img = tf.image.resize(img, IMAGE_SIZE)
-        return img / 255.0
-
     def remove_and_black_background(self):
         # Удаление фона с помощью rembg
         input_image = Image.open(self.img_path_orig)
         output_image = remove(input_image)
         self.img_size = output_image.size
         self.img_height, self.img_width = output_image.size
+
         # Создание черного фона
         black_background = Image.new("RGB", output_image.size, (0, 0, 0))
 
         # Наложение изображения с прозрачным фоном на черный фон
         black_background.paste(output_image, (0, 0), output_image)
 
+        # Приведение изображения к квадратному виду с помощью отступов
+        desired_size = max(self.img_width, self.img_height)
+        delta_w = desired_size - self.img_width
+        delta_h = desired_size - self.img_height
+        padding = (delta_h // 2, delta_w // 2, delta_h - (delta_h // 2), delta_w - (delta_w // 2))
+        black_background = ImageOps.expand(black_background, padding, fill='black')
+
+        # Изменение размера изображения до 640x640
+        black_background = black_background.resize((640, 640), Image.BICUBIC)
+
+        # Преобразование изображения в массив numpy и стандартизация пиксельных значений
         black_background = np.array(black_background)
-        img = tf.convert_to_tensor(black_background)
-        img = tf.image.resize(img, IMAGE_SIZE)
-        return img / 255.0
+
+        return black_background / 255.
 
     def pred_unet(self):
         """
@@ -286,19 +215,26 @@ class Foots:
         """
         processed_image = self.remove_and_black_background()
         orig_imgs = [processed_image]
-        # orig_imgs = [self.load_test_image()]
-        pred = MODEL_UNET.predict(np.array(orig_imgs))
+
+        # # Преобразование изображения в массив numpy и стандартизация пиксельных значений
+        img = orig_imgs[0]
+
+        # Расширение размерности для использования модели ONNX
+        img = np.expand_dims(img, axis=0)
+
+        # Преобразование типа данных в float32
+        img = img.astype(np.float32)
+
+        # Использование модели ONNX для предсказания
+        pred = MODEL_UNET_ONNX.run(None, {"input": img})[0]
+
         pred_mask = Binarizer(threshold=0.5).transform(pred.reshape(-1, 1)).reshape(pred.shape)
-        # Создаем директорию для сохранения изображений, если её еще нет
-        plt.clf()
         for i in range(len(orig_imgs)):
-            fig = plt.figure(figsize=(6.4, 6.4), dpi=100)
-            plt.imshow(orig_imgs[i] * pred_mask[i])
-            plt.axis('off')
-            plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем поля
-            plt.savefig(f'{UNET_PATH}{self.img_name}', bbox_inches='tight', pad_inches=0)
-            plt.close()
-        tf.keras.backend.clear_session()
+            combined_image = (orig_imgs[i] * pred_mask[i])
+            combined_image = (combined_image * 255.).astype(np.uint8)
+            combined_image = Image.fromarray(combined_image)
+            ImageOps.fit(combined_image, (640, 640)).save(f'{UNET_PATH}{self.img_name}')
+
         file_path = f'{UNET_PATH}{self.img_name}'
         self.img_path_unet = file_path
         return file_path
@@ -325,18 +261,6 @@ class Foot:
         self.x_top: int = 0  # X вверхней части
         self.x_middle: int = 0  # X средней части
         self.x_bottom: int = 0  # X нижней части
-        # из новых идей
-        self.apprx_x_coords: list[int] = []
-        self.apprx_y_coords: list[int] = []
-        # еще контуры
-        self.x_up_l = 0.
-        self.y_up_l = 0.
-        self.x_down_l = 0.
-        self.y_down_l = 0.
-        self.x_up_r = 0.
-        self.y_up_r = 0.
-        self.x_down_r = 0.
-        self.y_down_r = 0.
 
     def __str__(self):
         return f"Foot {self.type}"
@@ -371,143 +295,27 @@ class Foot:
         self.y_middle = int(self.y_max - (int(self.y_delta * self.y_middle_params) / 100))
         self.y_bottom = int(self.y_max - (int(self.y_delta * self.y_bottom_params) / 100))
 
-    def find_x(self, percent_top: int = 0, mid=False):
+    def find_x(self, percent_top: int = 0):
         """
         Поиск опорной точки по оси X
         :param: percent_top - процентное соотношение для top
         :param: mid
         """
-        # c помощью OpenCV numpy
         indx_b = np.where(self.y_coords == self.y_bottom)
         self.x_bottom = int((self.x_coords[indx_b[0][0]] + self.x_coords[indx_b[0][-1]]) / 2)
         indx_m = np.where(self.y_coords == self.y_middle)
         self.x_middle = int((self.x_coords[indx_m[0][0]] + self.x_coords[indx_m[0][-1]]) / 2)
-        # 50%50
         indx_t = np.where(self.y_coords == self.y_top)
         self.x_top = int((self.x_coords[indx_t[0][0]] + self.x_coords[indx_t[0][-1]]) / 2)
         if percent_top != 0:
-            # 60%40
             if self.type == 'left':
                 delta_l = abs(self.x_coords[indx_t[0][0]] - self.x_coords[indx_t[0][-1]])
                 percent = int((percent_top * delta_l) / 100)
                 self.x_top = int(max([self.x_coords[indx_t[0][0]], self.x_coords[indx_t[0][-1]]]) - percent)
-                # self.x_top = int(((self.x_coords[indx_t[0][0]] + self.x_coords[indx_t[0][-1]]) / 2) + (
-                #         (10 * abs(self.x_coords[indx_t[0][0]] - self.x_coords[indx_t[0][-1]])) / 100))  # 60%40
             if self.type == 'right':
                 delta_l = abs(self.x_coords[indx_t[0][0]] - self.x_coords[indx_t[0][-1]])
                 percent = int((percent_top * delta_l) / 100)
                 self.x_top = int(min([self.x_coords[indx_t[0][0]], self.x_coords[indx_t[0][-1]]]) + percent)
-                # self.x_top = int(((self.x_coords[indx_t[0][0]] + self.x_coords[indx_t[0][-1]]) / 2) - (
-                #         (10 * abs(self.x_coords[indx_t[0][0]] - self.x_coords[indx_t[0][-1]])) / 100))  # 60%40
-        if mid:
-            self.x_middle = self.x_mid_dot()
-
-    def approx_line(self):
-        """
-        Вверхняя точка
-        """
-        # переводим в структуру np.array
-        new_x = np.array(self.x_coords)
-        new_y = np.array(self.y_coords)
-        # извлечение всех координат конутра ниже отметки
-        indx = np.where(self.y_middle > new_y)
-        new_x = new_x[indx]
-        new_y = new_y[indx]
-        # извлечение всех координат конутра и выше отметки
-        indx = np.where(self.y_min < new_y)
-        new_x = new_x[indx]
-        new_y = new_y[indx]
-        # поиск левого и правого контура
-        indx = np.where(self.x_middle > new_x)
-        n_x_l = new_x[indx]
-        n_y_l = new_y[indx]
-        indx = np.where(self.x_middle < new_x)
-        n_x_r = new_x[indx]
-        n_y_r = new_y[indx]
-
-        # Функции апроксимации y(x)
-        degree = 1  # линейная функция апроксимации
-        new_Y = np.array([self.y_middle, self.y_min])  # для каких y нужно определить x
-        # левая
-        coef_l = np.polyfit(n_y_l, n_x_l, degree)
-        l_func_yx = np.poly1d(coef_l)
-        pred_x_l = l_func_yx(new_Y)
-        # правая
-        coef_r = np.polyfit(n_y_r, n_x_r, degree)
-        r_func_yx = np.poly1d(coef_r)
-        pred_x_r = r_func_yx(new_Y)
-        ang_l = self.angle_between_vectors(pred_x_l[1], self.y_min, pred_x_l[0], self.y_middle,
-                                           self.x_middle - self.x_middle / 2, self.y_middle)
-        ang_r = self.angle_between_vectors(pred_x_r[1], self.y_min, pred_x_r[0], self.y_middle, self.x_middle,
-                                           self.y_middle)
-        ang_t = self.angle_between_vectors(abs((pred_x_r[1] + pred_x_l[1]) / 2), self.y_min, self.x_middle,
-                                           self.y_middle, pred_x_l[0], self.y_middle)
-        self.x_top = abs((pred_x_r[1] + pred_x_l[1]) / 2)
-        self.y_top = self.y_min
-        self.x_up_l = pred_x_l[1]
-        self.y_up_l = self.y_min
-        self.x_down_l = pred_x_l[0]
-        self.y_down_l = self.y_middle
-        self.x_up_r = pred_x_r[1]
-        self.y_up_r = self.y_min
-        self.x_down_r = pred_x_r[0]
-        self.y_down_r = self.y_middle
-        plt.plot(n_x_l, n_y_l)
-        plt.plot(n_x_r, n_y_r)
-        plt.plot(pred_x_l, new_Y, '-r^')
-        plt.plot(pred_x_r, new_Y, '-g^')
-        plt.plot([pred_x_l[1], pred_x_l[0], self.x_middle - self.x_middle / 2],
-                 [self.y_min, self.y_middle, self.y_middle], '-y*')
-        plt.plot([pred_x_r[1], pred_x_r[0], self.x_middle], [self.y_min, self.y_middle, self.y_middle], '-b*')
-        plt.plot([abs((pred_x_r[1] + pred_x_l[1]) / 2), self.x_middle, pred_x_l[0]],
-                 [self.y_min, self.y_middle, self.y_middle], '-r^')
-        plt.gca().invert_yaxis()
-        plt.show()
-        print(ang_l)
-        print(ang_r)
-        print(ang_t)
-        # между контурами pred_x_l, new_Y и pred_x_r, new_Y построить линию
-        return (n_x_l, n_y_l), (n_x_r, n_y_r)
-
-    def x_mid_dot(self):
-        left_x_bound, right_x_bound = self.find_x_bounds_for_y()
-        print(left_x_bound, right_x_bound)
-        return int((left_x_bound + right_x_bound) / 2)
-
-    def angle_between_vectors(self, x1, y1, x2, y2, x3, y3):
-        """
-        Определение угла между двумя прямыми.
-        """
-        # x3 y3 - bot
-        # x2 y2 - mid
-        # x1 y1 - top
-        # Находим координаты векторов AB и BC
-        vec_ab = (x2 - x1, y2 - y1)
-        vec_bc = (x3 - x2, y3 - y2)
-
-        # Вычисляем скалярное произведение векторов AB и BC
-        dot_product = vec_ab[0] * vec_bc[0] + vec_ab[1] * vec_bc[1]
-
-        # Вычисляем длины векторов AB и BC
-        length_ab = math.sqrt((vec_ab[0] ** 2) + (vec_ab[1] ** 2))
-        length_bc = math.sqrt((vec_bc[0] ** 2) + (vec_bc[1] ** 2))
-
-        # Вычисляем угол между векторами в радианах
-        angle_rad = math.acos(dot_product / (length_ab * length_bc))
-
-        # Преобразуем радианы в градусы
-        angle_deg = math.degrees(angle_rad)
-
-        return angle_deg
-
-    def find_x_bounds_for_y(self, tolerance=250):
-        x_bounds = []
-        for i in range(len(self.apprx_y_coords)):
-            if abs(self.apprx_y_coords[i] - self.y_middle) <= tolerance:
-                x_bounds.append(int(self.apprx_x_coords[i]))
-        left_x_bound = min(x_bounds)
-        right_x_bound = max(x_bounds)
-        return left_x_bound, right_x_bound
 
 
 def image_process(img_path=None, file_name=None):
@@ -519,26 +327,15 @@ def image_process(img_path=None, file_name=None):
     foots.right_foot.link = foots.left_foot
     # unet_pred
     foots.pred_unet()
-    # для обрезания пальцев с помощью апркосимации (средняя точка)
-    contour_mid = False
-    dots = 5
-    mid_x = False
-
-    # для определения вверхней точки апроксимацией (вверхняя точка)
-    apprx_line_top = False
-    apprx_viz = False
     apply_yolo = True
     full_yolo = False
-
     # % соотношение вверхней точки
-    percent = 45
-
+    percent = 50
     # извлекаем контур изображения
     foots.image_to_countors()
     if len(foots.contours) > 2:
         sorted_indices = np.argsort([-arr.size for arr in foots.contours])
         foots.contours = (foots.contours[sorted_indices[0]], foots.contours[sorted_indices[1]])
-
     # извлекаем контур для каждой ноги отдельно
     for contour in foots.contours:
         if len(foots.right_foot.x_coords) == 0:
@@ -557,32 +354,20 @@ def image_process(img_path=None, file_name=None):
     foots.left_foot.parameters(top=90, middle=30, bottom=1)  # процентное сотноошение по высоте с низу вверх
     foots.right_foot.parameters(top=90, middle=30, bottom=1)  # от ступни до голени
 
-    # для обрезания пальцев с помощью апркосимации
-    if contour_mid:
-        foots.aprox_contours(num_dots=dots)
-        mid_x = True
-        apply_yolo = False
-
     # Поиск необходимых Y
     foots.left_foot.find_y()
     foots.right_foot.find_y()
 
     # Поиск необходимых X
-    foots.left_foot.find_x(percent_top=percent, mid=mid_x)
-    foots.right_foot.find_x(percent_top=percent, mid=mid_x)
+    foots.left_foot.find_x(percent_top=percent)
+    foots.right_foot.find_x(percent_top=percent)
 
     # Определение центральной точки с применением YOLO
     if apply_yolo:
         foots.yolo_key_point(full=full_yolo)
 
-    #  Определение вверхней точки с помощью апроксимации двух боковых кривых и нахождения средней кривой между нимим
-    if apprx_line_top:
-        foots.left_foot.approx_line()
-        foots.right_foot.approx_line()
-        apprx_viz = True
-
     # Визуализация
-    foots.visualization(apprx_l=apprx_viz)
+    foots.visualization()
     #
     print("\033[31m" + str(img_path[-9:]) + "\033[0m")
     print("\033[32m" + f'{foots.left_foot}:' + str(

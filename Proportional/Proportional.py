@@ -6,14 +6,10 @@ import matplotlib
 from rembg import remove
 from PIL import Image, ImageOps
 import onnxruntime as ort
+
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
-# from tensorflow.keras.models import load_model
-import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-
-# MODEL_UNET = load_model('/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model_other_foot.h5')
 MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
 IMAGE_SIZE = (640, 640)
 PLOTS_DPI = 150
@@ -180,7 +176,6 @@ class Foots:
         return file_path
 
 
-
 class Foot:
 
     def __init__(self, type: str):
@@ -313,6 +308,6 @@ def image_process(img_path=None, file_name=None):
 
 
 if __name__ == '__main__':
-    img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00489.png'
+    img_path: str = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/download/00489.png'
     img_name: str = img_path[-9:]
     image_process(img_path, img_name)

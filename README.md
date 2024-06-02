@@ -209,6 +209,23 @@ ___
   - Тестирование потоковой обработки.
   - Исправлена ошибка утечки памяти из-за модуля matplotlib.
 
+### - :bookmark: flask.
+  (19/05/2024)
+  - Добавлена информация о пользователе (имя, возраст)
+
+### - :bookmark: back.
+  (30/05/2024)
+  - Теперь точно исправлена ошибка с размерами изображений, при изменении размера изображения теперь пропорции сохраняются
+
+### - :bookmark: Модули.
+  (02/06/2024)
+  - Все методы отдельно собраны как отдельные модули
+  - Сегментация ног (UNet)
+  - Пропорциональный метод (Proportional)
+  - Метод на основе YOLO (YOLO)
+  - Комбинированный метод YOLO + Пропорциональный (Proportional + YOLO)
+  - Перевод модели на ONNX
+  - Песочница для тестов и идей (Sandbox)
 
 ## Результат
 ___
@@ -225,9 +242,6 @@ ___
 - :pushpin: [Определение угла пронации стопы 3 точками](https://bmcsportsscimedrehabil.biomedcentral.com/articles/10.1186/s13102-022-00457-7)
 - :pushpin: [Определение угла пронации стопы 4 точками](https://www.researchgate.net/publication/311246664_Clinical_measures_of_static_foot_posture_do_not_agree)
 
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Bubbles.png" alt="Bubbles" width="25" height="25" />
-<img align='center' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Alien%20Monster.png" alt="Alien Monster" width="25" height="25" /> 
-@Valeogamer, 2023-2024 
-<img align='center' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Alien%20Monster.png" alt="Alien Monster" width="25" height="25" />
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Bubbles.png" alt="Bubbles" width="25" height="25" />
+
+<img align='center' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Alien%20Monster.png" alt="Alien Monster" width="25" height="25" /> @Valeogamer, 2024  <img align='center' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Alien%20Monster.png" alt="Alien Monster" width="25" height="25" />
 
