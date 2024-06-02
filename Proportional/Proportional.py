@@ -1,7 +1,6 @@
 import cv2
 import math
 import numpy as np
-import tensorflow as tf
 import matplotlib.pyplot as plt
 import matplotlib
 from rembg import remove
@@ -9,13 +8,13 @@ from PIL import Image, ImageOps
 import onnxruntime as ort
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
-from tensorflow.keras.models import load_model
+# from tensorflow.keras.models import load_model
 import os
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-MODEL_UNET = load_model('/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model_other_foot.h5')
-MODEL_UNET_ONNX = load_model('/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx')
+# MODEL_UNET = load_model('/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model_other_foot.h5')
+MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
 IMAGE_SIZE = (640, 640)
 PLOTS_DPI = 150
 RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
@@ -148,10 +147,7 @@ class Foots:
         # Преобразование изображения в массив numpy и стандартизация пиксельных значений
         black_background = np.array(black_background)
 
-        # Преобразование изображения в тензор TensorFlow
-        img = tf.convert_to_tensor(black_background, dtype=tf.float32)
-
-        return img / 255.0
+        return black_background / 255.
 
     def pred_unet(self):
         """
@@ -159,19 +155,30 @@ class Foots:
         """
         processed_image = self.remove_and_black_background()
         orig_imgs = [processed_image]
-        # orig_imgs = [self.load_test_image()]
-        pred = MODEL_UNET.predict(np.array(orig_imgs))
+
+        # # Преобразование изображения в массив numpy и стандартизация пиксельных значений
+        img = orig_imgs[0]
+
+        # Расширение размерности для использования модели ONNX
+        img = np.expand_dims(img, axis=0)
+
+        # Преобразование типа данных в float32
+        img = img.astype(np.float32)
+
+        # Использование модели ONNX для предсказания
+        pred = MODEL_UNET_ONNX.run(None, {"input": img})[0]
+
         pred_mask = Binarizer(threshold=0.5).transform(pred.reshape(-1, 1)).reshape(pred.shape)
         for i in range(len(orig_imgs)):
-            combined_image = (orig_imgs[i] * pred_mask[i]).numpy()
-            combined_image = (combined_image * 255).astype(np.uint8)
+            combined_image = (orig_imgs[i] * pred_mask[i])
+            combined_image = (combined_image * 255.).astype(np.uint8)
             combined_image = Image.fromarray(combined_image)
             ImageOps.fit(combined_image, (640, 640)).save(f'{UNET_PATH}{self.img_name}')
 
-        tf.keras.backend.clear_session()
         file_path = f'{UNET_PATH}{self.img_name}'
         self.img_path_unet = file_path
         return file_path
+
 
 
 class Foot:
