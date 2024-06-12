@@ -11,13 +11,19 @@ import onnxruntime as ort
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
 
-MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
-MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
-IMAGE_SIZE = (640, 640)
-PLOTS_DPI = 150
-RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
-DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
-UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+# linux
+# MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
+# MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
+# RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+# DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
+# UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+
+# windows
+MODEL_YOLO = YOLO('C:/PyProjects/Valgus/App/models/best534.pt')
+MODEL_UNET_ONNX = ort.InferenceSession("C:/PyProjects/Valgus/App/models/unet_model.onnx")
+RESULT_PATH = 'C:/PyProjects/Valgus/App/static/temp/result/'
+DOWN_PATH = 'C:/PyProjects/Valgus/App/static/temp/download/'
+UNET_PATH = 'C:/PyProjects/Valgus/App/static/temp/unet_pred/'
 
 
 class Foots:

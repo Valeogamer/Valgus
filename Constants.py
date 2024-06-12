@@ -4,18 +4,17 @@ PW: str = 'pillow'
 # P - Orig
 # O - Mask
 # Пути до файлов
-# ToDo Все пути отладочные временные
 # Путь до основных каталогов
 PATH_DIR = "C://Users//Valentin//Desktop"
 # путь до файлов содержащие Оригинальные данные
-PATH_DIR_Orig: str = "C://Users//Valentin//Desktop//640x640copy//"  # путь до оригинала
+PATH_DIR_Orig: str = "C://Users//Valentin//Desktop//100Foot//538"  # путь до оригинала
 # путь до файлов содержащие Данные масок
-PATH_DIR_Mask: str = "C://Users//Valentin//Desktop//MasksBincopy//"  # путь до масок
+PATH_DIR_Mask: str = "C://Users//Valentin//Desktop//100Foot//538Masks"  # путь до масок
 
 # Пути для сохранения аргументированных данных
 NEW_PATH_DIR: str = "C://Users//Valentin//Desktop"  # основной путь до хранилища
-NEW_PATH_DIR_Mask: str = "C://Users//Valentin//Desktop//NewMasksBinAug"  # путь для сохранения аргументированных данных (масок)
-NEW_PATH_DIR_Orig: str = "C://Users//Valentin//Desktop//New640x640Aug"  # путь для сохранения аргументированных данных (оригинала)
+NEW_PATH_DIR_Orig: str = "C://Users//Valentin//Desktop//100Foot//538Aug"  # путь для сохранения аргументированных данных (оригинала)
+NEW_PATH_DIR_Mask: str = "C://Users//Valentin//Desktop//100Foot//538AugMasks"  # путь для сохранения аргументированных данных (масок)
 
 # Новое имя и рассширения для файлов
 NAME_Orig: str = '000'

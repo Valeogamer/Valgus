@@ -7,15 +7,19 @@ from rembg import remove
 from PIL import Image, ImageOps
 import onnxruntime as ort
 
-matplotlib.use('agg')
+# matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
 
-MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
-IMAGE_SIZE = (640, 640)
-PLOTS_DPI = 150
-RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
-DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
-UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+# MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
+# RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+# DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
+# UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+
+# windows
+MODEL_UNET_ONNX = ort.InferenceSession("C:/PyProjects/Valgus/App/models/unet_model.onnx")
+RESULT_PATH = 'C:/PyProjects/Valgus/App/static/temp/result/'
+DOWN_PATH = 'C:/PyProjects/Valgus/App/static/temp/download/'
+UNET_PATH = 'C:/PyProjects/Valgus/App/static/temp/unet_pred/'
 
 
 class Foots:
@@ -63,7 +67,6 @@ class Foots:
         Визуализация
         """
         plt.clf()
-        # fig, ax = plt.subplots()
         fig, ax = plt.subplots(figsize=(6.4, 6.4), dpi=100)
         ax.clear()
         ax.plot(self.left_foot.x_top, self.left_foot.y_top, 'r*')
@@ -88,10 +91,11 @@ class Foots:
         ax.text(self.right_foot.x_middle, self.right_foot.y_middle, f'{right_angl:.04}', fontsize=15, color='blue',
                 ha='left')
         ax.axis('off')
-        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем поля
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
         plt.savefig(f'{RESULT_PATH}{self.img_name}', bbox_inches='tight',
                     pad_inches=0)
         self.img_path_result = RESULT_PATH + self.img_name
+        plt.show()
 
     def angle_between_vectors(self, link):
         """
@@ -299,7 +303,7 @@ def image_process(img_path=None, file_name=None):
     foots.right_foot.find_x(percent_top=percent)
     # Визуализация
     foots.visualization()
-    print("\033[31m" + str(img_path[-9:]) + "\033[0m")
+    print("\033[31m" + foots.img_name + "\033[0m")
     print("\033[32m" + f'{foots.left_foot}:' + str(
         foots.angle_between_vectors(foots.left_foot)) + "\033[0m")
     print("\033[32m" + f'{foots.right_foot}:' + str(
@@ -308,6 +312,6 @@ def image_process(img_path=None, file_name=None):
 
 
 if __name__ == '__main__':
-    img_path: str = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/download/00489.png'
-    img_name: str = img_path[-9:]
+    img_path: str = 'C:/Users/Valentin/Desktop/538Foots/538/001.png'
+    img_name: str = img_path.split('/')[-1]
     image_process(img_path, img_name)
