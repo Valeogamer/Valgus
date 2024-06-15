@@ -86,7 +86,12 @@ class Foots:
                 [self.right_foot.y_top, self.right_foot.y_middle, self.right_foot.y_bottom],
                 '-ro')
         ax.invert_yaxis()
-        ax.imshow(self.image)
+        # Преобразование всех черных пикселей в белые
+        image_copy = self.image.copy()
+        black_pixels = (image_copy[:, :, 0] == 0) & (image_copy[:, :, 1] == 0) & (image_copy[:, :, 2] == 0)
+        image_copy[black_pixels] = [255, 255, 255]
+        ax.imshow(image_copy)
+        # ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
         self.left_foot.angle = int(left_angl)
@@ -240,7 +245,6 @@ class Foots:
             combined_image = (combined_image * 255.).astype(np.uint8)
             combined_image = Image.fromarray(combined_image)
             ImageOps.fit(combined_image, (640, 640)).save(f'{UNET_PATH}{self.img_name}')
-
         file_path = f'{UNET_PATH}{self.img_name}'
         self.img_path_unet = file_path
         return file_path
