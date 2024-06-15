@@ -2,24 +2,17 @@ import cv2
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
 from rembg import remove
 from PIL import Image, ImageOps
 import onnxruntime as ort
+import Constants as const
 
-# matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
 
-# MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
-# RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
-# DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
-# UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
-
-# windows
-MODEL_UNET_ONNX = ort.InferenceSession("C:/PyProjects/Valgus/App/models/unet_model.onnx")
-RESULT_PATH = 'C:/PyProjects/Valgus/App/static/temp/result/'
-DOWN_PATH = 'C:/PyProjects/Valgus/App/static/temp/download/'
-UNET_PATH = 'C:/PyProjects/Valgus/App/static/temp/unet_pred/'
+MODEL_UNET_ONNX = ort.InferenceSession(const.MODEL_UNET_ONNX_W)
+RESULT_PATH = const.RESULT_PATH_W
+DOWN_PATH = const.DOWN_PATH_W
+UNET_PATH = const.UNET_PATH_W
 
 
 class Foots:
@@ -81,7 +74,12 @@ class Foots:
                 [self.right_foot.y_top, self.right_foot.y_middle, self.right_foot.y_bottom],
                 '-ro')
         ax.invert_yaxis()
-        ax.imshow(self.image)
+        # Преобразование всех черных пикселей в белые
+        image_copy = self.image.copy()
+        black_pixels = (image_copy[:, :, 0] == 0) & (image_copy[:, :, 1] == 0) & (image_copy[:, :, 2] == 0)
+        image_copy[black_pixels] = [255, 255, 255]
+        ax.imshow(image_copy)
+        # ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
         self.left_foot.angle = int(left_angl)
@@ -312,6 +310,4 @@ def image_process(img_path=None, file_name=None):
 
 
 if __name__ == '__main__':
-    img_path: str = 'C:/Users/Valentin/Desktop/538Foots/538/001.png'
-    img_name: str = img_path.split('/')[-1]
-    image_process(img_path, img_name)
+    image_process(const.img_path, const.img_name)

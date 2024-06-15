@@ -26,3 +26,21 @@ NAME_Mask_E: str = NAME_Mask + EXTENTION_PNG
 # Размеры для стандартизации
 WIDTH: int = 640
 HEIGHT: int = 640
+
+# Путь до изображений для обработки.
+img_path: str = 'C:/Users/Valentin/Desktop/538Foots/538/0015.png'
+img_name: str = img_path.split('/')[-1]
+
+# Пути Linux
+MODEL_YOLO_L = '/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt'
+MODEL_UNET_ONNX_L = "/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx"
+RESULT_PATH_L = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+DOWN_PATH_L = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
+UNET_PATH_L = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+
+# Пути Windows
+MODEL_UNET_ONNX_W = "C:/PyProjects/Valgus/App/models/unet_model.onnx"
+RESULT_PATH_W = 'C:/PyProjects/Valgus/App/static/temp/result/'
+DOWN_PATH_W = 'C:/PyProjects/Valgus/App/static/temp/download/'
+UNET_PATH_W = 'C:/PyProjects/Valgus/App/static/temp/unet_pred/'
+MODEL_YOLO_W = 'C:/PyProjects/Valgus/models/best534.pt'

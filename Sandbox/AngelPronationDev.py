@@ -8,15 +8,16 @@ import matplotlib
 from rembg import remove
 from PIL import Image, ImageOps
 import onnxruntime as ort
+import Constants as const
 
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
 
-MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
-MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
-RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
-DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
-UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+MODEL_YOLO = YOLO(const.MODEL_YOLO_W)
+MODEL_UNET_ONNX = ort.InferenceSession(const.MODEL_UNET_ONNX_W)
+RESULT_PATH = const.RESULT_PATH_W
+DOWN_PATH = const.DOWN_PATH_W
+UNET_PATH = const.UNET_PATH_W
 
 
 class Foots:
@@ -150,7 +151,12 @@ class Foots:
                      self.right_foot.x_down_l],
                     [self.right_foot.y_min, self.right_foot.y_middle, self.right_foot.y_middle], '-r^', linewidth=lw)
         ax.invert_yaxis()
-        ax.imshow(self.image)
+        # Преобразование всех черных пикселей в белые
+        image_copy = self.image.copy()
+        black_pixels = (image_copy[:, :, 0] == 0) & (image_copy[:, :, 1] == 0) & (image_copy[:, :, 2] == 0)
+        image_copy[black_pixels] = [255, 255, 255]
+        ax.imshow(image_copy)
+        # ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
         self.left_foot.angle = int(left_angl)
@@ -596,6 +602,7 @@ def image_process(img_path=None, file_name=None):
     print("\033[32m" + f'{foots.right_foot}:' + str(
         foots.angle_between_vectors(foots.right_foot)) + "\033[0m")
     return foots.left_foot.angle, foots.right_foot.angle
+
 
 if __name__ == '__main__':
     img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00489.png'

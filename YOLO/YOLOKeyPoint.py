@@ -7,6 +7,7 @@ import matplotlib
 from rembg import remove
 from PIL import Image, ImageOps
 import onnxruntime as ort
+import Constants as const
 
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
@@ -14,13 +15,11 @@ import os
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
-MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
-IMAGE_SIZE = (640, 640)
-PLOTS_DPI = 150
-RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
-DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
-UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+MODEL_UNET_ONNX = ort.InferenceSession(const.MODEL_UNET_ONNX_W)
+RESULT_PATH = const.RESULT_PATH_W
+DOWN_PATH = const.DOWN_PATH_W
+UNET_PATH = const.UNET_PATH_W
+MODEL_YOLO = YOLO(const.MODEL_YOLO_W)
 
 
 class Foots:
@@ -58,7 +57,7 @@ class Foots:
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         _, binary = cv2.threshold(gray, tresh_begin, tresh_end, cv2.THRESH_BINARY)
         contours, hierarhy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        image = cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
+        image = cv2.drawContours(image, contours, -1, (0, 0, 0), 2)
         self.contours = contours
         self.gray = gray
         self.image = image
@@ -83,7 +82,12 @@ class Foots:
                 [self.right_foot.y_top, self.right_foot.y_middle, self.right_foot.y_bottom],
                 '-ro')
         ax.invert_yaxis()
-        ax.imshow(self.image)
+        # Преобразование всех черных пикселей в белые
+        image_copy = self.image.copy()
+        black_pixels = (image_copy[:, :, 0] == 0) & (image_copy[:, :, 1] == 0) & (image_copy[:, :, 2] == 0)
+        image_copy[black_pixels] = [255, 255, 255]
+        ax.imshow(image_copy)
+        # ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
         self.left_foot.angle = int(left_angl)
@@ -285,7 +289,4 @@ def image_process(img_path=None, file_name=None):
 
 
 if __name__ == '__main__':
-    # img_path: str = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/download/00489.png'
-    img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00496.png'
-    img_name: str = img_path[-9:]
-    image_process(img_path, img_name)
+    image_process(const.img_path, const.img_name)
