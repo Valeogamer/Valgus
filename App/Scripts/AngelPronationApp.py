@@ -117,6 +117,8 @@ class Foots:
 
         # Вычисляем скалярное произведение векторов AB и BC
         dot_product = vec_ab[0] * vec_bc[0] + vec_ab[1] * vec_bc[1]
+        if dot_product == 0:
+            return 0
 
         # Вычисляем длины векторов AB и BC
         length_ab = math.sqrt((vec_ab[0] ** 2) + (vec_ab[1] ** 2))
@@ -145,7 +147,7 @@ class Foots:
             else:
                 conf_i += 0.01
             if conf_i > 0.60:
-                raise NotImplemented
+                return
 
         for r in results:
             keypoints_tensor = r.keypoints.xy
@@ -387,7 +389,8 @@ def image_process(img_path=None, file_name=None):
     return foots.left_foot.angle, foots.right_foot.angle
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
+    pass
 #     img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00489.png'
 #     img_name: str = img_path[-9:]
 #     image_process(img_path, img_name)
