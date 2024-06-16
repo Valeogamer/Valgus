@@ -1,18 +1,32 @@
 import cv2
 import math
 import numpy as np
+from ultralytics import YOLO
 import matplotlib.pyplot as plt
+import matplotlib
 from rembg import remove
 from PIL import Image, ImageOps
 import onnxruntime as ort
-import Constants as const
 
+matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
+import os
+from time import perf_counter
+import pandas as pd
 
-MODEL_UNET_ONNX = ort.InferenceSession(const.MODEL_UNET_ONNX_W)
-RESULT_PATH = const.RESULT_PATH_W
-DOWN_PATH = const.DOWN_PATH_W
-UNET_PATH = const.UNET_PATH_W
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+# MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
+# MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
+# RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+# DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
+# UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+
+MODEL_UNET_ONNX = ort.InferenceSession("C:/PyProjects/Valgus/App/models/unet_model.onnx")
+RESULT_PATH = 'C:/PyProjects/Valgus/App/static/temp/result/'
+DOWN_PATH = 'C:/PyProjects/Valgus/App/static/temp/download/'
+UNET_PATH = 'C:/PyProjects/Valgus/App/static/temp/unet_pred/'
+MODEL_YOLO = YOLO('C:/PyProjects/Valgus/models/best534.pt')
 
 
 class Foots:
@@ -60,6 +74,7 @@ class Foots:
         Визуализация
         """
         plt.clf()
+        # fig, ax = plt.subplots()
         fig, ax = plt.subplots(figsize=(6.4, 6.4), dpi=100)
         ax.clear()
         ax.plot(self.left_foot.x_top, self.left_foot.y_top, 'r*')
@@ -74,12 +89,7 @@ class Foots:
                 [self.right_foot.y_top, self.right_foot.y_middle, self.right_foot.y_bottom],
                 '-ro')
         ax.invert_yaxis()
-        # Преобразование всех черных пикселей в белые
-        image_copy = self.image.copy()
-        black_pixels = (image_copy[:, :, 0] == 0) & (image_copy[:, :, 1] == 0) & (image_copy[:, :, 2] == 0)
-        image_copy[black_pixels] = [255, 255, 255]
-        ax.imshow(image_copy)
-        # ax.imshow(self.image)
+        ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
         self.left_foot.angle = int(left_angl)
@@ -89,11 +99,10 @@ class Foots:
         ax.text(self.right_foot.x_middle, self.right_foot.y_middle, f'{right_angl:.04}', fontsize=15, color='blue',
                 ha='left')
         ax.axis('off')
-        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем поля
         plt.savefig(f'{RESULT_PATH}{self.img_name}', bbox_inches='tight',
                     pad_inches=0)
         self.img_path_result = RESULT_PATH + self.img_name
-        plt.show()
 
     def angle_between_vectors(self, link):
         """
@@ -118,6 +127,69 @@ class Foots:
         angle_deg = math.degrees(angle_rad)
 
         return angle_deg
+
+    def yolo_key_point(self, full=False):
+        results = None
+        flag = True
+        conf_i = 0.10
+        while flag:
+            results = MODEL_YOLO.predict(self.img_path_unet, conf=conf_i, imgsz=(640, 640))
+            check_l = []
+            for r in results:
+                check_l.append(r.keypoints.xy.tolist())
+            if len(check_l[0]) == 2:
+                # ToDo чтобы не было такого чтобы bb наложены друг на друга
+                flag = False  # Ну или можно break
+            else:
+                conf_i += 0.01
+            if conf_i > 0.60:
+                return False
+
+        for r in results:
+            keypoints_tensor = r.keypoints.xy
+            keypoints_list = keypoints_tensor.tolist()
+
+            # Получаем координаты ключевых точек для левой ноги
+            left_xy = keypoints_list[0][:3]
+            l_x, l_y = [], []
+            for xy in left_xy:
+                l_x.append(xy[0])
+                l_y.append(xy[1])
+            # Получаем координаты ключевых точек для правой ноги
+            right_xy = keypoints_list[1][:3]
+            r_x, r_y = [], []
+            for xy in right_xy:
+                r_x.append(xy[0])
+                r_y.append(xy[1])
+            if l_x[1] < r_x[1]:
+                if full:
+                    self.left_foot.x_top = l_x[0]
+                    self.left_foot.y_top = l_y[0]
+                    self.left_foot.x_bottom = l_x[2]
+                    self.left_foot.y_bottom = l_y[2]
+                    self.right_foot.x_top = r_x[0]
+                    self.right_foot.y_top = r_y[0]
+                    self.right_foot.x_bottom = r_x[2]
+                    self.right_foot.y_bottom = r_y[2]
+                self.left_foot.x_middle = l_x[1]
+                self.left_foot.y_middle = l_y[1]
+                self.right_foot.x_middle = r_x[1]
+                self.right_foot.y_middle = r_y[1]
+            else:
+                if full:
+                    self.left_foot.x_top = r_x[0]
+                    self.left_foot.y_top = r_y[0]
+                    self.left_foot.x_bottom = r_x[2]
+                    self.left_foot.y_bottom = r_y[2]
+                    self.right_foot.x_top = l_x[0]
+                    self.right_foot.y_top = l_y[0]
+                    self.right_foot.x_bottom = l_x[2]
+                    self.right_foot.y_bottom = l_y[2]
+                self.right_foot.x_middle = l_x[1]
+                self.right_foot.y_middle = l_y[1]
+                self.left_foot.x_middle = r_x[1]
+                self.left_foot.y_middle = r_y[1]
+        return True
 
     def remove_and_black_background(self):
         # Удаление фона с помощью rembg
@@ -182,20 +254,13 @@ class Foot:
 
     def __init__(self, type: str):
         self.type: str = type
-        self.link = None
         self.angle = None  # вычисленный угол
-        self.x_coords: list = []  # координаты контура
-        self.y_coords: list = []  # координаты контура
         self.y_max: int = 0  # макс по Y контура
         self.y_min: int = 0  # мин по Y контура
         self.y_delta: int = 0  # длина по вертикали
-        self.y_top_params: int = 60  # % вверхней части
-        self.y_middle_params: int = 30  # % средней части
-        self.y_bottom_params: int = 10  # % нижней части
         self.y_top: int = 0  # Y вверхней части
         self.y_middle: int = 0  # Y средней части
         self.y_bottom: int = 0  # Y нижней части
-        self.y_list_values: list[list[int]] = []  # Возможные варианты значения X на оси на выбранных осях:Y-t;Y-m;Y-b
         self.x_top: int = 0  # X вверхней части
         self.x_middle: int = 0  # X средней части
         self.x_bottom: int = 0  # X нижней части
@@ -206,108 +271,42 @@ class Foot:
     def __repr__(self):
         return f"Foot {self.type}: {id(self)}"
 
-    def ymax_ymin(self):
-        """
-        Поиск максимального и минимального значения по оси Y.
-        """
-        self.y_max = max(self.y_coords)
-        self.y_min = min(self.y_coords)
-        if abs(self.y_max - self.y_min) < 15:
-            self.y_min = self.link.y_min
-        self.y_delta = int(abs(self.y_max - self.y_min))
-
-    def parameters(self, top: int = 70, middle: int = 25, bottom: int = 1):
-        """
-        Параметры пропорции.
-        """
-        self.y_top_params = top
-        self.y_bottom_params = bottom
-        self.y_middle_params = middle
-
-    def find_y(self):
-        """
-        Поиск опорной точки по оси Y
-        """
-        self.ymax_ymin()
-        self.y_top = int(self.y_max - (int(self.y_delta * self.y_top_params) / 100))
-        self.y_middle = int(self.y_max - (int(self.y_delta * self.y_middle_params) / 100))
-        self.y_bottom = int(self.y_max - (int(self.y_delta * self.y_bottom_params) / 100))
-
-    def find_x(self, percent_top: int = 0):
-        """
-        Поиск опорной точки по оси X
-        :param: percent_top - процентное соотношение для top
-        :param: mid
-        """
-        # c помощью OpenCV numpy
-        indx_b = np.where(self.y_coords == self.y_bottom)
-        self.x_bottom = int((self.x_coords[indx_b[0][0]] + self.x_coords[indx_b[0][-1]]) / 2)
-        indx_m = np.where(self.y_coords == self.y_middle)
-        self.x_middle = int((self.x_coords[indx_m[0][0]] + self.x_coords[indx_m[0][-1]]) / 2)
-        # 50%50
-        indx_t = np.where(self.y_coords == self.y_top)
-        self.x_top = int((self.x_coords[indx_t[0][0]] + self.x_coords[indx_t[0][-1]]) / 2)
-        if percent_top != 0:
-            # 60%40
-            if self.type == 'left':
-                delta_l = abs(self.x_coords[indx_t[0][0]] - self.x_coords[indx_t[0][-1]])
-                percent = int((percent_top * delta_l) / 100)
-                self.x_top = int(max([self.x_coords[indx_t[0][0]], self.x_coords[indx_t[0][-1]]]) - percent)
-            if self.type == 'right':
-                delta_l = abs(self.x_coords[indx_t[0][0]] - self.x_coords[indx_t[0][-1]])
-                percent = int((percent_top * delta_l) / 100)
-                self.x_top = int(min([self.x_coords[indx_t[0][0]], self.x_coords[indx_t[0][-1]]]) + percent)
-
 
 def image_process(img_path=None, file_name=None):
-    if img_path is None or file_name is None:
-        return 'Загружены не корректные данные'
+    global list_name, left, right
     foots = Foots()
     foots.img_path_orig = img_path
     foots.img_name = file_name
-    # перекрестная ссылка
-    foots.left_foot.link = foots.right_foot
-    foots.right_foot.link = foots.left_foot
-    # unet_pred
     foots.pred_unet()
-    # % соотношение вверхней точки
-    percent = 50
-    # извлекаем контур изображения
     foots.image_to_countors()
-    if len(foots.contours) > 2:
-        sorted_indices = np.argsort([-arr.size for arr in foots.contours])
-        foots.contours = (foots.contours[sorted_indices[0]], foots.contours[sorted_indices[1]])
-    # извлекаем контур для каждой ноги отдельно
-    for contour in foots.contours:
-        if len(foots.right_foot.x_coords) == 0:
-            foots.right_foot.x_coords = contour[:, 0, 0]
-            foots.right_foot.y_coords = contour[:, 0, 1]
-        else:
-            foots.left_foot.x_coords = contour[:, 0, 0]
-            foots.left_foot.y_coords = contour[:, 0, 1]
-        foots.x_contours.extend(contour[:, 0, 0])
-        foots.y_contours.extend(contour[:, 0, 1])
-    if max(foots.left_foot.x_coords) > max(foots.right_foot.x_coords):
-        foots.left_foot.x_coords, foots.right_foot.x_coords = foots.right_foot.x_coords, foots.left_foot.x_coords
-        foots.left_foot.y_coords, foots.right_foot.y_coords = foots.right_foot.y_coords, foots.left_foot.y_coords
-    # % соотношение по высоте Y
-    foots.left_foot.parameters(top=90, middle=30, bottom=1)  # процентное сотноошение по высоте с низу вверх
-    foots.right_foot.parameters(top=90, middle=30, bottom=1)  # от ступни до голени
-    # Поиск необходимых Y
-    foots.left_foot.find_y()
-    foots.right_foot.find_y()
-    # Поиск необходимых X
-    foots.left_foot.find_x(percent_top=percent)
-    foots.right_foot.find_x(percent_top=percent)
+    if not foots.yolo_key_point(full=True):
+        list_name.append(file_name)
+        left.append(int(0))
+        right.append(int(0))
+        return
+    left_angl = foots.angle_between_vectors(foots.left_foot)
+    right_angl = foots.angle_between_vectors(foots.right_foot)
+    list_name.append(file_name)
+    left.append(int(left_angl))
+    right.append(int(right_angl))
     # Визуализация
-    foots.visualization()
-    print("\033[31m" + foots.img_name + "\033[0m")
-    print("\033[32m" + f'{foots.left_foot}:' + str(
-        foots.angle_between_vectors(foots.left_foot)) + "\033[0m")
-    print("\033[32m" + f'{foots.right_foot}:' + str(
-        foots.angle_between_vectors(foots.right_foot)) + "\033[0m")
-    return foots.left_foot.angle, foots.right_foot.angle
+    # foots.visualization()
+    #
+    # print("\033[31m" + str(img_path[-9:]) + "\033[0m")
+    # print("\033[32m" + f'{foots.left_foot}:' + str(
+    #     foots.angle_between_vectors(foots.left_foot)) + "\033[0m")
+    # print("\033[32m" + f'{foots.right_foot}:' + str(
+    #     foots.angle_between_vectors(foots.right_foot)) + "\033[0m")
 
 
 if __name__ == '__main__':
-    image_process(const.img_path, const.img_name)
+    list_name, left, right = [], [], []
+    start = perf_counter()
+    img_path = 'C:/Users/Valentin/Desktop/Img/'
+    for n_img in os.listdir(img_path):
+        image_process(img_path + n_img, n_img)
+    df = pd.DataFrame({'img': list_name,
+                       'left': left,
+                       'right': right})
+    df.to_excel(f'./test.xlsx')
+    print(f"Для {len(os.listdir(img_path))} фото, время выполнения: ", perf_counter() - start)

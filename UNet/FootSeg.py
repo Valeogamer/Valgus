@@ -3,12 +3,13 @@ import matplotlib
 from rembg import remove
 from PIL import Image, ImageOps
 import onnxruntime as ort
+import Constants as const
 
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
 
-MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
-UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/UNet/result/'
+MODEL_UNET_ONNX = ort.InferenceSession(const.MODEL_UNET_ONNX_W)
+UNET_PATH = const.UNET_PATH_W
 
 
 class Foots:
@@ -87,6 +88,4 @@ def image_process(img_path=None, file_name=None):
 
 
 if __name__ == '__main__':
-    img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00489.png'
-    img_name: str = img_path[-9:]
-    image_process(img_path, img_name)
+    image_process(const.img_path, const.img_name)

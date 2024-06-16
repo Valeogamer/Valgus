@@ -4,9 +4,13 @@ import os
 from uuid import uuid4
 
 app = Flask(__name__)
+# ubuntu
+# DOWNLOAD_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/download/'
+# RESULT_FOLDER = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
 
-DOWNLOAD_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/download/'
-RESULT_FOLDER = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+# windows
+RESULT_FOLDER= 'C:/PyProjects/Valgus/App/static/temp/result/'
+DOWNLOAD_PATH = 'C:/PyProjects/Valgus/App/static/temp/download/'
 
 
 @app.route('/')
@@ -58,4 +62,4 @@ def upload():
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)
-    # app.run(host='192.168.0.xx', port=5000, debug=True, threaded=True)
+    # app.run(host='192.168.0.12', port=5000, debug=True, threaded=True)

@@ -12,7 +12,8 @@ class FileManager:
     Менеджер файлов
     """
 
-    def __init__(self, path_dir, path_dir_orig, path_dir_mask, new_n_orig, new_n_mask, extention, new_path_dir, new_path_dir_mask,
+    def __init__(self, path_dir, path_dir_orig, path_dir_mask, new_n_orig, new_n_mask, extention, new_path_dir,
+                 new_path_dir_mask,
                  new_path_dir_orig):
         # ToDo некоторые атрибуты должны быть protected
         self.path_dir: tp.Optional[str] = path_dir  # Constants.PATH_DIR
@@ -76,7 +77,7 @@ class FileManager:
         """
         self.path_dir_list_orig = [self.path_dir_orig + '//' + i for i in os.listdir(self.path_dir_orig)]
         self.path_dir_list_mask = [self.path_dir_mask + '//' + i for i in
-                                            os.listdir(self.path_dir_mask)]
+                                   os.listdir(self.path_dir_mask)]
 
     def update_result_data(self):
         """
@@ -578,6 +579,11 @@ class ImageAugmentorPillow:
         """
         return image.convert("L")
 
+    def color_ench(self, image, cor=1.5):
+        color_enhancer = ImageEnhance.Color(image)
+        return color_enhancer.enhance(cor)
+
+
     def run_augmentor(self, file_manager: FileManager):
         """
         Запуск основных методов аугментации данных, по отдельности как для mask, так и для orig.
@@ -593,52 +599,53 @@ class ImageAugmentorPillow:
                 img = self.open_image(image_path)
                 # img = img.resize((640, 640))
                 list_aug_imgs.extend(
-                    [img, self.blur(img), self.flip(img, 1), self.add_noise(img), self.adjust_brightness(img, 5.0),
+                    [img, self.gray_scale(img), self.blur(img), self.add_noise(img), self.adjust_brightness(img, 5.0),
                      self.adjust_brightness(img, -5.0), self.adjust_contrast(img, 0.4),
-                     self.adjust_contrast(img, 1.2)])
+                     self.adjust_contrast(img, 1.2), self.color_augmentation(img)])
+                list_aug_imgs.extend([self.color_augmentation(img, beta_range=-80), self.color_augmentation(img, beta_range=80),
+                                      self.color_augmentation(img, alpha_range=-0.9), self.color_augmentation(img, alpha_range=0.9)])
+                list_aug_imgs.extend([img, self.color_ench(img, cor=2), self.color_ench(img, cor=-1.0)])
+                # list_aug_imgs.extend([img, self.gamma_adjustment(img, gamma=0.7), self.gamma_adjustment(img, gamma=1.8)])
+                # list_aug_imgs.extend([img, self.adjust_contrast(img, factor=0.7), self.adjust_contrast(img, factor=1.5)])
                 for image in list_aug_imgs:
                     image = image.resize((640, 640))
                     self.save_image(image, save_path=file_manager.new_path_dir_orig,
                                     name=file_manager.new_name_orig + str(
                                         file_manager.len_name) + file_manager.extention)
                     file_manager.len_name += 1
-                for l_img in list_aug_imgs:
-                    rotate_list = []
-                    rotate_list.extend(
-                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180),
-                         self.rotate(l_img, 45), self.rotate(l_img, -45), self.rotate(l_img, 135),
-                         self.rotate(l_img, 225)])
-                    for r_img in rotate_list:
-                        r_img = r_img.resize((640, 640))
-                        self.save_image(r_img, save_path=file_manager.new_path_dir_orig,
-                                        name=file_manager.new_name_orig + str(
-                                            file_manager.len_name) + file_manager.extention)
-                        file_manager.len_name += 1
+                # for l_img in list_aug_imgs:
+                #     rotate_list = []
+                #     rotate_list.extend(
+                #         [self.rotate(l_img, 45), self.rotate(l_img, -45)])
+                #     for r_img in rotate_list:
+                #         r_img = r_img.resize((640, 640))
+                #         self.save_image(r_img, save_path=file_manager.new_path_dir_orig,
+                #                         name=file_manager.new_name_orig + str(
+                #                             file_manager.len_name) + file_manager.extention)
+                #         file_manager.len_name += 1
 
         # аугментация mask
         if len(file_manager.path_dir_list_mask) > 0:
             file_manager.len_name = 1
             for image_path in file_manager.path_dir_list_mask:
-                list_aug_imgs = []
+                list_aug_m_imgs = []
                 img = self.open_image(image_path)
                 # img = img.resize((640, 640))
-                list_aug_imgs.extend(
-                    [img, img, self.flip(img, 1), img, img, img, img, img])
-                for image in list_aug_imgs:
+                list_aug_m_imgs.extend(
+                    [img for _ in range(len(list_aug_imgs))])
+                for image in list_aug_m_imgs:
                     image = image.resize((640, 640))
                     self.save_image(image, save_path=file_manager.new_path_dir_mask,
                                     name=file_manager.new_name_mask + str(
                                         file_manager.len_name) + file_manager.extention)
                     file_manager.len_name += 1
-                for l_img in list_aug_imgs:
-                    rotate_list = []
-                    rotate_list.extend(
-                        [self.rotate(l_img, 90), self.rotate(l_img, -90), self.rotate(l_img, 180),
-                         self.rotate(l_img, 45), self.rotate(l_img, -45), self.rotate(l_img, 135),
-                         self.rotate(l_img, 225)])
-                    for r_img in rotate_list:
-                        r_img = r_img.resize((640, 640))
-                        self.save_image(r_img, save_path=file_manager.new_path_dir_mask,
-                                        name=file_manager.new_name_mask + str(
-                                            file_manager.len_name) + file_manager.extention)
-                        file_manager.len_name += 1
+                # for l_img in list_aug_m_imgs:
+                #     rotate_list = []
+                #     rotate_list.extend(
+                #         [self.rotate(l_img, 45), self.rotate(l_img, -45)])
+                #     for r_img in rotate_list:
+                #         r_img = r_img.resize((640, 640))
+                #         self.save_image(r_img, save_path=file_manager.new_path_dir_mask,
+                #                         name=file_manager.new_name_mask + str(
+                #                             file_manager.len_name) + file_manager.extention)
+                #         file_manager.len_name += 1

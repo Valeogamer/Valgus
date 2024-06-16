@@ -14,4 +14,4 @@ if __name__ == '__main__':
     img_aug.run_augmentor(file_manager)
     end_time = time.time()
     execution_time = end_time - start_time
-    print("Время выполнения:", execution_time, "секунд")
+    print("Время выполнения:", f'{execution_time:0.4f}', "секунд")

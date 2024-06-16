@@ -2,17 +2,28 @@ import cv2
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 from rembg import remove
 from PIL import Image, ImageOps
 import onnxruntime as ort
-import Constants as const
 
+# matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
 
-MODEL_UNET_ONNX = ort.InferenceSession(const.MODEL_UNET_ONNX_W)
-RESULT_PATH = const.RESULT_PATH_W
-DOWN_PATH = const.DOWN_PATH_W
-UNET_PATH = const.UNET_PATH_W
+import pandas as pd
+import os
+from time import perf_counter
+
+# MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
+# RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+# DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
+# UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+
+# windows
+MODEL_UNET_ONNX = ort.InferenceSession("C:/PyProjects/Valgus/App/models/unet_model.onnx")
+RESULT_PATH = 'C:/PyProjects/Valgus/App/static/temp/result/'
+DOWN_PATH = 'C:/PyProjects/Valgus/App/static/temp/download/'
+UNET_PATH = 'C:/PyProjects/Valgus/App/static/temp/unet_pred/'
 
 
 class Foots:
@@ -74,12 +85,7 @@ class Foots:
                 [self.right_foot.y_top, self.right_foot.y_middle, self.right_foot.y_bottom],
                 '-ro')
         ax.invert_yaxis()
-        # Преобразование всех черных пикселей в белые
-        image_copy = self.image.copy()
-        black_pixels = (image_copy[:, :, 0] == 0) & (image_copy[:, :, 1] == 0) & (image_copy[:, :, 2] == 0)
-        image_copy[black_pixels] = [255, 255, 255]
-        ax.imshow(image_copy)
-        # ax.imshow(self.image)
+        ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
         self.left_foot.angle = int(left_angl)
@@ -259,7 +265,7 @@ class Foot:
                 self.x_top = int(min([self.x_coords[indx_t[0][0]], self.x_coords[indx_t[0][-1]]]) + percent)
 
 
-def image_process(img_path=None, file_name=None):
+def image_process(img_path=None, file_name=None, par=25):
     if img_path is None or file_name is None:
         return 'Загружены не корректные данные'
     foots = Foots()
@@ -291,23 +297,42 @@ def image_process(img_path=None, file_name=None):
         foots.left_foot.x_coords, foots.right_foot.x_coords = foots.right_foot.x_coords, foots.left_foot.x_coords
         foots.left_foot.y_coords, foots.right_foot.y_coords = foots.right_foot.y_coords, foots.left_foot.y_coords
     # % соотношение по высоте Y
-    foots.left_foot.parameters(top=90, middle=30, bottom=1)  # процентное сотноошение по высоте с низу вверх
-    foots.right_foot.parameters(top=90, middle=30, bottom=1)  # от ступни до голени
+    foots.left_foot.parameters(top=75, middle=par, bottom=1)  # процентное сотноошение по высоте с низу вверх
+    foots.right_foot.parameters(top=75, middle=par, bottom=1)  # от ступни до голени
     # Поиск необходимых Y
     foots.left_foot.find_y()
     foots.right_foot.find_y()
     # Поиск необходимых X
     foots.left_foot.find_x(percent_top=percent)
     foots.right_foot.find_x(percent_top=percent)
+    # s->
+    left_angl = foots.angle_between_vectors(foots.left_foot)
+    right_angl = foots.angle_between_vectors(foots.right_foot)
+    global list_name, left, right
+    list_name.append(file_name)
+    left.append(int(left_angl))
+    right.append(int(right_angl))
+    # <-e
     # Визуализация
-    foots.visualization()
-    print("\033[31m" + foots.img_name + "\033[0m")
-    print("\033[32m" + f'{foots.left_foot}:' + str(
-        foots.angle_between_vectors(foots.left_foot)) + "\033[0m")
-    print("\033[32m" + f'{foots.right_foot}:' + str(
-        foots.angle_between_vectors(foots.right_foot)) + "\033[0m")
-    return foots.left_foot.angle, foots.right_foot.angle
+    # foots.visualization()
+    # print("\033[31m" + str(img_path[-9:]) + "\033[0m")
+    # print("\033[32m" + f'{foots.left_foot}:' + str(
+    #     foots.angle_between_vectors(foots.left_foot)) + "\033[0m")
+    # print("\033[32m" + f'{foots.right_foot}:' + str(
+    #     foots.angle_between_vectors(foots.right_foot)) + "\033[0m")
 
 
 if __name__ == '__main__':
-    image_process(const.img_path, const.img_name)
+    list_name, left, right = [], [], []
+    start = perf_counter()
+    img_path = 'C:/Users/Valentin/Desktop/Img/'
+    for p in [25, 30, 35]:
+        for n_img in os.listdir(img_path):
+            image_process(img_path+n_img, n_img, par=p)
+        df = pd.DataFrame({'img': list_name,
+                           'left': left,
+                           'right': right})
+        df.to_excel(f'./{p}test.xlsx')
+        list_name, left, right = [], [], []
+    print(f"Для {len(os.listdir(img_path))*3} фото, время выполнения: ", perf_counter() - start)
+

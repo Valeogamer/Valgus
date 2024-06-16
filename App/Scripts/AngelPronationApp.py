@@ -11,13 +11,19 @@ import onnxruntime as ort
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
 
-MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
-MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
-IMAGE_SIZE = (640, 640)
-PLOTS_DPI = 150
-RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
-DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
-UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+# linux
+# MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
+# MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
+# RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
+# DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
+# UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
+
+# windows
+MODEL_YOLO = YOLO('C:/PyProjects/Valgus/App/models/best534.pt')
+MODEL_UNET_ONNX = ort.InferenceSession("C:/PyProjects/Valgus/App/models/unet_model.onnx")
+RESULT_PATH = 'C:/PyProjects/Valgus/App/static/temp/result/'
+DOWN_PATH = 'C:/PyProjects/Valgus/App/static/temp/download/'
+UNET_PATH = 'C:/PyProjects/Valgus/App/static/temp/unet_pred/'
 
 
 class Foots:
@@ -80,7 +86,12 @@ class Foots:
                 [self.right_foot.y_top, self.right_foot.y_middle, self.right_foot.y_bottom],
                 '-ro')
         ax.invert_yaxis()
-        ax.imshow(self.image)
+        # Преобразование всех черных пикселей в белые
+        image_copy = self.image.copy()
+        black_pixels = (image_copy[:, :, 0] == 0) & (image_copy[:, :, 1] == 0) & (image_copy[:, :, 2] == 0)
+        image_copy[black_pixels] = [255, 255, 255]
+        ax.imshow(image_copy)
+        # ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
         self.left_foot.angle = int(left_angl)
@@ -106,6 +117,8 @@ class Foots:
 
         # Вычисляем скалярное произведение векторов AB и BC
         dot_product = vec_ab[0] * vec_bc[0] + vec_ab[1] * vec_bc[1]
+        if dot_product == 0:
+            return 0
 
         # Вычисляем длины векторов AB и BC
         length_ab = math.sqrt((vec_ab[0] ** 2) + (vec_ab[1] ** 2))
@@ -134,7 +147,7 @@ class Foots:
             else:
                 conf_i += 0.01
             if conf_i > 0.60:
-                raise NotImplemented
+                return
 
         for r in results:
             keypoints_tensor = r.keypoints.xy
@@ -234,7 +247,6 @@ class Foots:
             combined_image = (combined_image * 255.).astype(np.uint8)
             combined_image = Image.fromarray(combined_image)
             ImageOps.fit(combined_image, (640, 640)).save(f'{UNET_PATH}{self.img_name}')
-
         file_path = f'{UNET_PATH}{self.img_name}'
         self.img_path_unet = file_path
         return file_path
@@ -377,7 +389,8 @@ def image_process(img_path=None, file_name=None):
     return foots.left_foot.angle, foots.right_foot.angle
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
+    pass
 #     img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00489.png'
 #     img_name: str = img_path[-9:]
 #     image_process(img_path, img_name)
