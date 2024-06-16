@@ -2,13 +2,13 @@
 
 ___
 
-Данный репозиторий посвящен разработке приложения для определения плоско-вальгусной деформации стопы с использованием методов машинного обучения.
-Является результатом ВКР и показателем полученных навыков в течении всего учебного процесса.
+Данный репозиторий посвящен разработке методов для определения плоско-вальгусной деформации стопы.
+А также является результатом ВКР и показателем полученных навыков в течении всего учебного процесса.
 
 ## Цель <img align='center' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Bullseye.png" alt="Bullseye" width="30" height="30" />
 
 ___
-Разработать приложение (алгоритм) для определения по фото плоско-вальгусной деформации стопы.
+Разработать методы для определения по фото плоско-вальгусной деформации стопы.
 
 ## Задачи <img align='center' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Triangular%20Flag.png" alt="Triangular Flag" width="30" height="30" />
 
@@ -23,19 +23,20 @@ ___
 - :white_check_mark: Разработать интерфейс GUI, UI/UX.
 - :white_check_mark: Готовые варианты решения собрать как веб приложение.
 - :white_check_mark: Написать ВКР:
-    - [ ] Введение.
+    - :white_check_mark: Введение.
     - :white_check_mark: Глава 1. Теоретическая часть.
-    - [ ] Глава 2. Методология.
-    - [ ] Глава 3. Результаты экспериментов.
-    - [ ] Глава 4. Пользовательский интерфейс.
-    - [ ] Заключение.
-    - [ ] Приложение.
+    - :white_check_mark: Глава 2. Методология.
+    - :white_check_mark: Глава 3. Результаты исследований.
+    - :white_check_mark: Глава 4. Веб-приложение.
+    - :white_check_mark: Заключение.
+    - :white_check_mark: Приложение.
+- [ ] : 27/06/2024 Защитить ВКР
 - Из мелких задач:
-  - [ ] Реализовать блок-схемы алгоритма.
-  - [ ] Диаграммы (UML)
-  - [ ] Графики (сравнение истинных и предсказанных результатов)
-  - [ ] Иллюстрации
-  - [ ] Листинг кода
+  - :white_check_mark: Реализовать блок-схемы алгоритма.
+  - :white_check_mark: Диаграммы (UML)
+  - :white_check_mark: Графики (сравнение истинных и предсказанных результатов)
+  - :white_check_mark: Иллюстрации
+  - :white_check_mark: Листинг кода
 
 ## Дневник <img align='center' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Spiral%20Calendar.png" alt="Spiral Calendar" width="35" height="35" />
 
@@ -234,20 +235,36 @@ ___
   - Дополнена страница о нас 
   - Дописан ВКР (требуется проверка)
 
+### - :bookmark: back+front.
+  (15/06/2024)
+  - Обработка исключений
+  - Прототип приложения +- работает
+  - В диплом добавлено Приложение А, листинги методов
+  - Составлена презентация к защите ВКР
+  - Прикреплены таблицы с результатами и соотвествующие изображения
+
+
 ## Результат
 ___
-  Результатом данной работы является веб приложение.
+  Реализованы 3 метода определения ключевых анатомических точек.
+  Реализован прототип веб-приложение для проведения будущих клинических тестов.
 
 ## Полезные ссылки
 
 ___
 
-- :pushpin: [МОИ ЗАМЕТКИ ПО ВКР(Notion)](https://www.notion.so/valeogamer/6b1b24f878ef4167a9469d566dcf8406)
-- :pushpin: [Пронация(видео)](https://youtu.be/7ec8YnKBCt0?si=XBUyKiy460pbOQat)
-- :pushpin: [КЛАССИФИКАЦИЯ ПЛОСКО-ВАЛЬГУСНОЙ ДЕФОРМАЦИИ СТОП](http://vestnik.krsu.edu.kg/archive/15/1139)
+- :pushpin: [МОИ ЗАМЕТКИ ПО ВКР(Notion)](https://valeogamer.notion.site/6b1b24f878ef4167a9469d566dcf8406?pvs=4)
+- :pushpin: [МОИ ЗАМЕТКИ ПО Python(Notion)](https://www.notion.so/valeogamer/Python-a38d6b05555f4a329b6b2f30603e1f70?pvs=4)
+- :pushpin: [Roboflow (инструмент для разметки данных)](https://docs.roboflow.com/)
+- :pushpin: [YOLO](https://www.ultralytics.com/ru)
+- :pushpin: [OpenCV](https://docs.opencv.org/3.4/d6/d00/tutorial_py_root.html)
+- :pushpin: [Tutor по YOLO](https://www.youtube.com/@Koldim2001)
 - :pushpin: [Определение угла пронации стопы 3 точками](https://www.mdpi.com/2076-3417/12/13/6764)
 - :pushpin: [Определение угла пронации стопы 3 точками](https://bmcsportsscimedrehabil.biomedcentral.com/articles/10.1186/s13102-022-00457-7)
 - :pushpin: [Определение угла пронации стопы 4 точками](https://www.researchgate.net/publication/311246664_Clinical_measures_of_static_foot_posture_do_not_agree)
+- :pushpin: [Пронация(видео)](https://youtu.be/7ec8YnKBCt0?si=XBUyKiy460pbOQat)
+- :pushpin: [ПВДС](http://vestnik.krsu.edu.kg/archive/15/1139)
+
 
 
 <img align='center' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Alien%20Monster.png" alt="Alien Monster" width="25" height="25" /> @Valeogamer, 2024  <img align='center' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Alien%20Monster.png" alt="Alien Monster" width="25" height="25" />
