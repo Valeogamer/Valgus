@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
-import AnglePronationApp as AP
-import os
+from flask import Flask, render_template, request, redirect, url_for, send_file
+from DataBaseFoot import db, DBFootPronation
+import AnglePronationApp as ap
 from uuid import uuid4
 import Config
-from DataBaseFoot import db, DBFootPronation
+import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///DBFoot.db'
@@ -51,7 +51,7 @@ def upload():
     filename = str(uuid4()) + os.path.splitext(file.filename)[1]
     file_path = os.path.join(Config.DOWN_ABS_PATH, filename)
     file.save(file_path)
-    l_f, r_f = AP.image_process(file_path, filename)
+    l_f, r_f = ap.image_process(file_path, filename)
 
     if l_f is not None:
         # Сохранение данных в базе данных
