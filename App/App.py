@@ -1,16 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for
-import Scripts.AngelPronationApp as AP
-import os
+from flask import Flask, render_template, request, redirect, url_for, send_file
+from DataBaseFoot import db, DBFootPronation
+import AnglePronationApp as ap
 from uuid import uuid4
+import Config
+import os
 
 app = Flask(__name__)
-# ubuntu
-# DOWNLOAD_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/download/'
-# RESULT_FOLDER = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
-
-# windows
-RESULT_FOLDER= 'C:/PyProjects/Valgus/App/static/temp/result/'
-DOWNLOAD_PATH = 'C:/PyProjects/Valgus/App/static/temp/download/'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///DBFoot.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
 
 
 @app.route('/')
@@ -51,15 +49,29 @@ def upload():
         return redirect("/")
 
     filename = str(uuid4()) + os.path.splitext(file.filename)[1]
-    file_path = os.path.join(DOWNLOAD_PATH, filename)
+    file_path = os.path.join(Config.DOWN_ABS_PATH, filename)
     file.save(file_path)
-    l_f, r_f = AP.image_process(file_path, filename)
-    if l_f:
+    l_f, r_f = ap.image_process(file_path, filename)
+
+    if l_f is not None:
+        # Сохранение данных в базе данных
+        new_result = DBFootPronation(
+            filename=filename,
+            name=name, age=int(age),
+            left_foot=l_f,
+            right_foot=r_f,
+            filename_download=Config.DOWN_PATH + filename,
+            filename_unet_pred=Config.UNET_PATH + filename,
+            filename_result=Config.RESULT_PATH + filename)
+        db.session.add(new_result)
+        db.session.commit()
         return redirect(url_for('result', img_name=filename, name=name, age=age, left_foot=l_f, right_foot=r_f))
     else:
         return 'Ошибка обработки изображения', 500
 
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True, threaded=True)
-    # app.run(host='192.168.0.12', port=5000, debug=True, threaded=True)
+    # app.run(host=Config.host, port=Config.port, debug=Config.debug, threaded=Config.thread)

@@ -7,23 +7,17 @@ import matplotlib
 from rembg import remove
 from PIL import Image, ImageOps
 import onnxruntime as ort
+import Config
 
 matplotlib.use('agg')
 from sklearn.preprocessing import Binarizer
 
-# linux
-# MODEL_YOLO = YOLO('/home/valeogamer/PycharmProjects/Valgus/App/models/best534.pt')
-# MODEL_UNET_ONNX = ort.InferenceSession("/home/valeogamer/PycharmProjects/Valgus/App/models/unet_model.onnx")
-# RESULT_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/result/'
-# DOWN_PATH = '/home/valeogamer/PycharmProjects/ValgusApp/static/temp/download/'
-# UNET_PATH = '/home/valeogamer/PycharmProjects/Valgus/App/static/temp/unet_pred/'
-
-# windows
-MODEL_YOLO = YOLO('C:/PyProjects/Valgus/App/models/best534.pt')
-MODEL_UNET_ONNX = ort.InferenceSession("C:/PyProjects/Valgus/App/models/unet_model.onnx")
-RESULT_PATH = 'C:/PyProjects/Valgus/App/static/temp/result/'
-DOWN_PATH = 'C:/PyProjects/Valgus/App/static/temp/download/'
-UNET_PATH = 'C:/PyProjects/Valgus/App/static/temp/unet_pred/'
+# PATH
+MODEL_YOLO = YOLO(Config.YOLO_PATH)
+MODEL_UNET_ONNX = ort.InferenceSession(Config.UNET_ONNX_PATH)
+RESULT_PATH = Config.RESULT_ABS_PATH
+DOWN_PATH = Config.DOWN_ABS_PATH
+UNET_PATH = Config.UNET_ABS_PATH
 
 
 class Foots:
@@ -87,11 +81,11 @@ class Foots:
                 '-ro')
         ax.invert_yaxis()
         # Преобразование всех черных пикселей в белые
-        image_copy = self.image.copy()
-        black_pixels = (image_copy[:, :, 0] == 0) & (image_copy[:, :, 1] == 0) & (image_copy[:, :, 2] == 0)
-        image_copy[black_pixels] = [255, 255, 255]
-        ax.imshow(image_copy)
-        # ax.imshow(self.image)
+        # image_copy = self.image.copy()
+        # black_pixels = (image_copy[:, :, 0] == 0) & (image_copy[:, :, 1] == 0) & (image_copy[:, :, 2] == 0)
+        # image_copy[black_pixels] = [255, 255, 255]
+        # ax.imshow(image_copy)
+        ax.imshow(self.image)
         left_angl = self.angle_between_vectors(self.left_foot)
         right_angl = self.angle_between_vectors(self.right_foot)
         self.left_foot.angle = int(left_angl)
@@ -147,7 +141,7 @@ class Foots:
             else:
                 conf_i += 0.01
             if conf_i > 0.60:
-                return
+                return True
 
         for r in results:
             keypoints_tensor = r.keypoints.xy
@@ -193,6 +187,7 @@ class Foots:
                 self.right_foot.y_middle = l_y[1]
                 self.left_foot.x_middle = r_x[1]
                 self.left_foot.y_middle = r_y[1]
+        return False
 
     def remove_and_black_background(self):
         # Удаление фона с помощью rembg
@@ -314,10 +309,12 @@ class Foot:
         :param: mid
         """
         indx_b = np.where(self.y_coords == self.y_bottom)
-        self.x_bottom = int((self.x_coords[indx_b[0][0]] + self.x_coords[indx_b[0][-1]]) / 2)
         indx_m = np.where(self.y_coords == self.y_middle)
-        self.x_middle = int((self.x_coords[indx_m[0][0]] + self.x_coords[indx_m[0][-1]]) / 2)
         indx_t = np.where(self.y_coords == self.y_top)
+        if not indx_t[0].any() or not indx_m[0].any() or not indx_b[0].any():
+            return
+        self.x_bottom = int((self.x_coords[indx_b[0][0]] + self.x_coords[indx_b[0][-1]]) / 2)
+        self.x_middle = int((self.x_coords[indx_m[0][0]] + self.x_coords[indx_m[0][-1]]) / 2)
         self.x_top = int((self.x_coords[indx_t[0][0]] + self.x_coords[indx_t[0][-1]]) / 2)
         if percent_top != 0:
             if self.type == 'left':
@@ -348,6 +345,10 @@ def image_process(img_path=None, file_name=None):
     if len(foots.contours) > 2:
         sorted_indices = np.argsort([-arr.size for arr in foots.contours])
         foots.contours = (foots.contours[sorted_indices[0]], foots.contours[sorted_indices[1]])
+    if len(foots.contours) < 2:
+        # либо None, но тогда нужно написать страницу для обработки ошибки, сейчас данная обработку внутри страницы result
+        return 0, 0
+
     # извлекаем контур для каждой ноги отдельно
     for contour in foots.contours:
         if len(foots.right_foot.x_coords) == 0:
@@ -376,7 +377,8 @@ def image_process(img_path=None, file_name=None):
 
     # Определение центральной точки с применением YOLO
     if apply_yolo:
-        foots.yolo_key_point(full=full_yolo)
+        if foots.yolo_key_point(full=full_yolo):
+            return 0, 0
 
     # Визуализация
     foots.visualization()
@@ -390,7 +392,7 @@ def image_process(img_path=None, file_name=None):
 
 
 if __name__ == '__main__':
-    pass
-#     img_path: str = '/home/valeogamer/Загрузки/Unet_BG/00489.png'
-#     img_name: str = img_path[-9:]
-#     image_process(img_path, img_name)
+    # img_path: str = 'C:/Users/Valentin/Desktop/ВКР/Изображения/2ComponentDig.png'
+    img_path: str = 'C:/Users/Valentin/Desktop/ВКР/Foot.png'
+    img_name: str = img_path.split('/')[-1]
+    image_process(img_path, img_name)
