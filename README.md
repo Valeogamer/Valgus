@@ -30,7 +30,7 @@ ___
     - :white_check_mark: Глава 4. Веб-приложение.
     - :white_check_mark: Заключение.
     - :white_check_mark: Приложение.
-- [ ] : 27/06/2024 Защитить ВКР
+- :white_check_mark: : 27/06/2024 Защитить ВКР
 - Из мелких задач:
   - :white_check_mark: Реализовать блок-схемы алгоритма.
   - :white_check_mark: Диаграммы (UML)
