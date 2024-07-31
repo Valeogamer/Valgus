@@ -1,7 +1,12 @@
 import os
 
-ROOT_DIR = os.path.abspath("App")
-ROOT_DIR = ROOT_DIR.split('\\')
+ROOT_DIR = os.path.abspath('App')
+if os.name == 'nt':
+    ROOT_DIR = ROOT_DIR.split('\\')
+elif os.name == 'posix':
+    ROOT_DIR = ROOT_DIR.split('/')
+else:
+    raise NotImplemented
 del ROOT_DIR[-1]
 ROOT_DIR = '/'.join(ROOT_DIR)
 # linux
