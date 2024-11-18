@@ -1,0 +1,5 @@
+app = Flask(__name__, static_folder=os.path.join(Config.ROOT_DIR, 'static'), template_folder=os.path.join(Config.ROOT_DIR, 'templates'))
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{Config.ROOT_DIR+'/instance'}//DBFoot.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Отключить кеширование
+pyinstaller --onefile app.py

@@ -8,10 +8,11 @@
 <div class="container">
     <h1 class="mt-5 mb-4">Результат обработки</h1>
     <div class="row">
-        {% if left_foot != 0 and right_foot != 0 and left_foot < 26 and right_foot < 26 %}
+        {% if left_foot != 0 and right_foot != 0 and left_foot < 30 and right_foot < 30 %}
         <div class="col-md-6">
-            <img src="{{ url_for('static', filename='temp/result/' + img_name) }}" class="img-fluid rounded"
+                 <img src="{{ url_for('static', filename='temp/result/' + img_name) }}" class="img-fluid rounded"
                  alt="Processed Image">
+                 <!--<p>{{ url_for('static', filename='temp/result/' + img_name) }}</p>-->
         </div>
         <div class="col-md-6">
             <div class="alert alert-success">
@@ -20,29 +21,29 @@
             </div>
             <h4>Левая нога</h4>
             <p><strong>Градус отклонения пятки:</strong> {{ left_foot }}</p>
-            <div class="alert {% if 25 >= left_foot >= 20 %}alert-danger {% elif 20 > left_foot >= 15 %}alert-warning {% elif 15 > left_foot >= 10 %}alert-warning {% elif 0.2 < left_foot < 10 %}alert-success {% else %}alert-danger{% endif %}">
+            <div class="alert {% if 16 < left_foot %}alert-danger {% elif 12 < left_foot <= 16 %}alert-warning {% elif 7 <= left_foot <= 12 %}alert-warning {% elif 0.2 < left_foot < 7 %}alert-success {% else %}alert-danger{% endif %}">
                 <strong>Степень деформации:</strong>
-                {% if 25 >= left_foot >= 20 %}
+                {% if 16 < left_foot %}
                 3 степень
-                {% elif 20 > left_foot >= 15 %}
+                {% elif 12 < left_foot <= 16 %}
                 2 степень
-                {% elif 15 > left_foot >= 10 %}
+                {% elif 7 <= left_foot <= 12 %}
                 1 степень
-                {% elif 0.2 < left_foot < 10 %}
+                {% elif 0.2 < left_foot < 7 %}
                 В пределах нормы
                 {% else %}
                 <h3> Ошибка </h3>
                 {% endif %}
             </div>
             <p><strong>Симптомы:</strong>
-                {% if 25 >= left_foot >= 20 %}
+                {% if 16 < left_foot %}
                 боли в области стопы и голеностопного сустава, усталость ног, боли в ногах после физической нагрузки,
                 склонность к вывихам и растяжениям
-                {% elif 20 > left_foot >= 15 %}
+                {% elif 12 < left_foot <= 16 %}
                 усталость ног, боли в ногах после длительной ходьбы, небольшие боли в голеностопном суставе
-                {% elif 15 > left_foot >= 10 %}
+                {% elif 7 <= left_foot <= 12 %}
                 легкая усталость ног, дискомфорт при длительной ходьбе
-                {% elif 0.2 < left_foot < 10 %}
+                {% elif 0.2 < left_foot < 7 %}
                 Отклонение в пределах нормы
                 {% else %}
                 <h3> Ошибка </h3>
@@ -51,29 +52,29 @@
 
             <h3>Правая нога</h3>
             <p><strong>Градус отклонения пятки:</strong> {{ right_foot }}</p>
-            <div class="alert {% if 25 >= right_foot >= 20 %}alert-danger {% elif 20 > right_foot >= 15 %}alert-warning {% elif 15 > right_foot >= 10 %}alert-warning {% elif 0.2 < right_foot < 10 %}alert-success {% else %}alert-danger{% endif %}">
+            <div class="alert {% if 16 < right_foot %}alert-danger {% elif 12 < right_foot <= 16 %}alert-warning {% elif 7 <= right_foot <= 12 %}alert-warning {% elif 0.2 < right_foot < 7 %}alert-success {% else %}alert-danger{% endif %}">
                 <strong>Степень деформации:</strong>
-                {% if 25 >= right_foot >= 20 %}
+                {% if 16 < right_foot %}
                 3 степень
-                {% elif 20 > right_foot >= 15 %}
+                {% elif 12 < right_foot <= 16 %}
                 2 степень
-                {% elif 15 > right_foot >= 10 %}
+                {% elif 7 <= right_foot <= 12 %}
                 1 степень
-                {% elif 0.2 < right_foot < 10 %}
+                {% elif 0.2 < right_foot < 7 %}
                 В пределах нормы
                 {% else %}
                 <h3> Ошибка </h3>
                 {% endif %}
             </div>
             <p><strong>Симптомы:</strong>
-                {% if 25 >= right_foot >= 20 %}
+                {% if 16 < right_foot %}
                 боли в области стопы и голеностопного сустава, усталость ног, боли в ногах после физической нагрузки,
                 склонность к вывихам и растяжениям
-                {% elif 20 > right_foot >= 15 %}
+                {% elif 12 < right_foot <= 16 %}
                 усталость ног, боли в ногах после длительной ходьбы, небольшие боли в голеностопном суставе
-                {% elif 15 > right_foot >= 10 %}
+                {% elif 7 <= right_foot <= 12 %}
                 легкая усталость ног, дискомфорт при длительной ходьбе
-                {% elif 0.2 < right_foot < 10 %}
+                {% elif 0.2 < right_foot < 7 %}
                 Отклонение в пределах нормы
                 {% else %}
                 <h3> Ошибка </h3>

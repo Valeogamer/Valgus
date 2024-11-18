@@ -7,6 +7,7 @@ class DBFootPronation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     age = db.Column(db.Integer, nullable=False)
+    genders = db.Column(db.String(50), nullable=False)
     filename = db.Column(db.String(100), unique=True, nullable=False)
     left_foot = db.Column(db.Integer, nullable=False)
     right_foot = db.Column(db.Integer, nullable=False)

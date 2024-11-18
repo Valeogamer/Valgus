@@ -96,9 +96,10 @@ class Foots:
                 ha='left')
         ax.axis('off')
         plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем поля
-        plt.savefig(f'{RESULT_PATH}{self.img_name}', bbox_inches='tight',
+        print(Config.os.path.join(RESULT_PATH, self.img_name))
+        plt.savefig(Config.os.path.join(RESULT_PATH, self.img_name), bbox_inches='tight',
                     pad_inches=0)
-        self.img_path_result = RESULT_PATH + self.img_name
+        self.img_path_result = Config.os.path.join(RESULT_PATH, self.img_name)
 
     def angle_between_vectors(self, link):
         """
@@ -241,8 +242,9 @@ class Foots:
             combined_image = (orig_imgs[i] * pred_mask[i])
             combined_image = (combined_image * 255.).astype(np.uint8)
             combined_image = Image.fromarray(combined_image)
-            ImageOps.fit(combined_image, (640, 640)).save(f'{UNET_PATH}{self.img_name}')
-        file_path = f'{UNET_PATH}{self.img_name}'
+            ImageOps.fit(combined_image, (640, 640)).save(Config.os.path.join(UNET_PATH, self.img_name))
+        print(Config.os.path.join(UNET_PATH, self.img_name))
+        file_path = Config.os.path.join(UNET_PATH, self.img_name)
         self.img_path_unet = file_path
         return file_path
 
@@ -392,7 +394,4 @@ def image_process(img_path=None, file_name=None):
 
 
 if __name__ == '__main__':
-    # img_path: str = 'C:/Users/Valentin/Desktop/ВКР/Изображения/2ComponentDig.png'
-    img_path: str = 'C:/Users/Valentin/Desktop/ВКР/Foot.png'
-    img_name: str = img_path.split('/')[-1]
-    image_process(img_path, img_name)
+    pass
