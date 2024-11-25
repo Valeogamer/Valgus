@@ -33,12 +33,12 @@ def result():
     img_name = request.args.get('img_name', default='', type=str)
     name = request.args.get('name', default='', type=str)
     age = request.args.get('age', default='', type=int)
-    foot_l = request.args.get('left_foot', default='', type=int)
-    foot_r = request.args.get('right_foot', default='', type=int)
+    LF = request.args.get('left_foot', default='', type=int)
+    RF = request.args.get('right_foot', default='', type=int)
     print('---img_name---', img_name)
     full_img_path = os.path.join(app.static_folder, 'temp\\result', img_name)
     print(full_img_path)
-    return render_template('result.html', img_name=img_name, name=name, age=age, left_foot=foot_l, right_foot=foot_r)
+    return render_template('result.html', img_name=img_name, name=name, age=age, left_foot=LF, right_foot=RF)
 
 
 @app.route('/upload', methods=['POST'])
@@ -57,26 +57,28 @@ def upload():
     filename = str(uuid4()) + os.path.splitext(file.filename)[1]
     file_path = os.path.join(Config.DOWN_ABS_PATH, filename)
     file.save(file_path)
-    l_f, r_f = ap.image_process(file_path, filename)
+    LF, RF = ap.image_process(file_path, filename)
 
-    if l_f is not None:
+    if LF is not None:
         # Сохранение данных в базе данных
-        print(Config.DATA_BASE_PATH)
-        print(Config.DOWN_ABS_PATH)
-        print(Config.UNET_ABS_PATH)
-        print(Config.RESULT_ABS_PATH)
-        print(filename)
+        # print(Config.DATA_BASE_PATH)
+        # print(Config.DOWN_ABS_PATH)
+        # print(Config.UNET_ABS_PATH)
+        # print(Config.RESULT_ABS_PATH)
+        # print(filename)
         new_result = DBFootPronation(
             filename=filename,
             name=name, age=int(age), genders=gender,
-            left_foot=l_f,
-            right_foot=r_f,
+            LF=LF,
+            RF=RF,
+            TLF=request.form.get('TLF'),
+            TRF=request.form.get('TRF'),
             filename_download=Config.DOWN_ABS_PATH + filename,
             filename_unet_pred=Config.UNET_ABS_PATH + filename,
             filename_result=Config.RESULT_ABS_PATH + filename)
         db.session.add(new_result)
         db.session.commit()
-        return redirect(url_for('result', img_name=filename, name=name, age=age, left_foot=l_f, right_foot=r_f))
+        return redirect(url_for('result', img_name=filename, name=name, age=age, left_foot=LF, right_foot=RF))
     else:
         return 'Ошибка обработки изображения', 500
 
